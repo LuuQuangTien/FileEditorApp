@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/neutral_50"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp">
+
+        <!-- Header Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manage your account and settings"
+            android:textSize="14sp"
+            android:textColor="@color/neutral_600"
+            android:layout_marginBottom="24dp" />
+
+        <!-- User Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_gradient_features"
+            android:padding="24dp"
+            android:layout_marginBottom="24dp">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+                
+                <FrameLayout
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="@drawable/bg_white_alpha_circle">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_user"
+                        app:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="John Doe"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="18sp" />
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="john.doe@example.com"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Upgrade to Premium"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_crown"
+                app:iconTint="@color/white"
+                app:iconGravity="textStart"
+                app:backgroundTint="#33FFFFFF"
+                app:strokeColor="#33FFFFFF"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Account Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Account"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/neutral_600"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="4dp"/>
+
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_edit_profile" />
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_email" />
+
+        <!-- App Settings Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="App Settings"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/neutral_600"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="4dp"/>
+
+        <include layout="@layout/item_profile_setting_toggle"
+            android:id="@+id/setting_notifications" />
+        <include layout="@layout/item_profile_setting_toggle"
+            android:id="@+id/setting_dark_mode" />
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_language" />
+
+        <!-- Other Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Other"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/neutral_600"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="4dp"/>
+
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_help" />
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_privacy" />
+        <include layout="@layout/item_profile_setting"
+            android:id="@+id/setting_terms" />
+
+        <!-- Storage Used -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/neutral_200"
+            app:strokeWidth="1dp">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical">
+                    
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Storage"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2.4 GB / 10 GB"
+                        android:textColor="@color/neutral_600"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:background="@drawable/bg_neutral_100_rounded">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_gradient_storage"
+                        android:layout_marginEnd="60dp" /> <!-- Roughly 24% simulation -->
+                </FrameLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Log Out Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Log Out"
+            android:textColor="@color/red_600"
+            app:icon="@drawable/ic_log_out"
+            app:iconTint="@color/red_600"
+            app:iconGravity="textStart"
+            android:backgroundTint="#FEF2F2"
+            app:strokeColor="#FECACA"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Version 1.0.0"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:textColor="@color/neutral_600" />
+            
+    </LinearLayout>
+</ScrollView>

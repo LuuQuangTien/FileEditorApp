@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DocumentFileEditor</string>
+    <string name="home">Home</string>
+    <string name="files">Files</string>
+    <string name="tools">Tools</string>
+    <string name="profile">Profile</string>
+</resources>
