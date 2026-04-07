@@ -12,7 +12,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DocumentFileEditor">
         <activity
-            android:name=".MainActivity"
+            android:name=".Activity.ImageFilterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.RotateImageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.ExcelEditorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.EnhanceImageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.CropImageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,21 +35,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
-            android:name=".ScanActivity"
+            android:name=".Activity.ScanActivity"
             android:exported="false"
             android:theme="@style/Theme.DocumentFileEditor" />
         <activity
-            android:name=".TranslateActivity"
+            android:name=".Activity.TranslateActivity"
             android:exported="false"
             android:theme="@style/Theme.DocumentFileEditor" />
-            
         <activity
-            android:name=".OcrActivity"
+            android:name=".Activity.OcrActivity"
             android:exported="false"
             android:theme="@style/Theme.DocumentFileEditor" />
-            
+        <activity
+            android:name=".Activity.DocumentEditorActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocumentFileEditor"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

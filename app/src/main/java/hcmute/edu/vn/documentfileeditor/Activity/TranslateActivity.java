@@ -1,10 +1,12 @@
-package hcmute.edu.vn.documentfileeditor;
+package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import androidx.appcompat.app.AppCompatActivity;
+
+import hcmute.edu.vn.documentfileeditor.R;
 
 public class TranslateActivity extends AppCompatActivity {
 
@@ -27,11 +29,11 @@ public class TranslateActivity extends AppCompatActivity {
 
         if (spinnerSource != null) {
             spinnerSource.setAdapter(adapter);
-            spinnerSource.setSelection(0); // English
+            spinnerSource.setSelection(0);
         }
         if (spinnerTarget != null) {
             spinnerTarget.setAdapter(adapter);
-            spinnerTarget.setSelection(1); // Vietnamese
+            spinnerTarget.setSelection(1);
         }
     }
 }

@@ -291,6 +291,7 @@
             
             <!-- Item 1 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_recent_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
@@ -351,6 +352,7 @@
 
             <!-- Item 2 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_recent_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
@@ -411,6 +413,7 @@
 
             <!-- Item 3 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_recent_3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="@color/white"

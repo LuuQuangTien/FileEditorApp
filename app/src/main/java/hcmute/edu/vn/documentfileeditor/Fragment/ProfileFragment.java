@@ -1,4 +1,4 @@
-package hcmute.edu.vn.documentfileeditor;
+package hcmute.edu.vn.documentfileeditor.Fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import hcmute.edu.vn.documentfileeditor.R;
 
 public class ProfileFragment extends Fragment {
 

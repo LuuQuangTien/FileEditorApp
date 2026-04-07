@@ -1,7 +1,6 @@
-package hcmute.edu.vn.documentfileeditor;
+package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.os.Bundle;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +12,12 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import hcmute.edu.vn.documentfileeditor.Fragment.DocumentsFragment;
+import hcmute.edu.vn.documentfileeditor.Fragment.HomeFragment;
+import hcmute.edu.vn.documentfileeditor.Fragment.ProfileFragment;
+import hcmute.edu.vn.documentfileeditor.Fragment.ToolsFragment;
+import hcmute.edu.vn.documentfileeditor.R;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -23,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0); // Bottom is handled by bottom nav if needed, but 0 prevents bottom nav getting squished too far.
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
 
@@ -39,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new DocumentsFragment();
             } else if (itemId == R.id.nav_tools) {
                 selectedFragment = new ToolsFragment();
+            } else if (itemId == R.id.nav_chat) {
+                selectedFragment = new hcmute.edu.vn.documentfileeditor.Fragment.ChatFragment();
             } else if (itemId == R.id.nav_profile) {
                 selectedFragment = new ProfileFragment();
             }

@@ -13,6 +13,10 @@
         android:icon="@drawable/ic_wrench"
         android:title="@string/tools" />
     <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_star"
+        android:title="Chat" />
+    <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_user"
         android:title="@string/profile" />

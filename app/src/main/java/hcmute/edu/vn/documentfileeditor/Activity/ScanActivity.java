@@ -1,8 +1,10 @@
-package hcmute.edu.vn.documentfileeditor;
+package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.os.Bundle;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import hcmute.edu.vn.documentfileeditor.R;
 
 public class ScanActivity extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package hcmute.edu.vn.documentfileeditor;
+package hcmute.edu.vn.documentfileeditor.Fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,6 +8,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.OcrActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.ScanActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.TranslateActivity;
+import hcmute.edu.vn.documentfileeditor.R;
+
 public class HomeFragment extends Fragment {
 
     @Nullable
@@ -16,6 +22,7 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         
         setupQuickActions(view);
+        setupRecentFiles(view);
         
         return view;
     }
@@ -44,6 +51,19 @@ public class HomeFragment extends Fragment {
                 android.content.Intent intent = new android.content.Intent(getActivity(), TranslateActivity.class);
                 startActivity(intent);
             });
+        }
+    }
+
+    private void setupRecentFiles(View view) {
+        int[] recentIds = {R.id.card_recent_1, R.id.card_recent_2, R.id.card_recent_3};
+        for (int id : recentIds) {
+            View card = view.findViewById(id);
+            if (card != null) {
+                card.setOnClickListener(v -> {
+                    android.content.Intent intent = new android.content.Intent(getActivity(), DocumentEditorActivity.class);
+                    startActivity(intent);
+                });
+            }
         }
     }
 }
