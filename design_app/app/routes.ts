@@ -15,8 +15,18 @@ import { CropImage } from "./pages/CropImage";
 import { RotateImage } from "./pages/RotateImage";
 import { ImageFilter } from "./pages/ImageFilter";
 import { EnhanceImage } from "./pages/EnhanceImage";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 
 export const router = createBrowserRouter([
+  {
+    path: "/login",
+    Component: Login,
+  },
+  {
+    path: "/register",
+    Component: Register,
+  },
   {
     path: "/",
     Component: Layout,

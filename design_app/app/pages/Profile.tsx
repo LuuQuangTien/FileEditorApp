@@ -224,6 +224,7 @@ export function Profile() {
         {/* Logout */}
         <Button
           variant="outline"
+          onClick={() => navigate("/login")}
           className="w-full gap-2 text-red-600 border-red-200 hover:bg-red-50"
         >
           <LogOut className="size-4" />
