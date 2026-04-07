@@ -55,6 +55,26 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_open_chat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+
+                android:minHeight="56dp"
+                android:text="Chat directly with AI"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_500"
+                android:paddingVertical="12dp"
+                android:backgroundTint="@color/neutral_300"
+                app:icon="@drawable/ic_message_square"
+                app:iconTint="@color/white"
+                app:iconPadding="8dp"
+                app:iconGravity="textStart"
+
+                app:cornerRadius="12dp"/>
+
             <!-- AI Actions Grid: Row 1 -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -117,6 +137,10 @@
                     android:gravity="center"
                     android:text="Make Shorter"
                     android:textSize="12sp"
+                    app:icon="@drawable/ic_shrink_text"
+                    app:iconSize="20dp"
+                    app:iconTint="#F59E0B"
+                    app:iconGravity="top"
                     app:cornerRadius="12dp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -130,6 +154,10 @@
                     android:gravity="center"
                     android:text="Make Longer"
                     android:textSize="12sp"
+                    app:icon="@drawable/ic_expand_text"
+                    app:iconSize="20dp"
+                    app:iconTint="#10B981"
+                    app:iconGravity="top"
                     app:cornerRadius="12dp" />
             </LinearLayout>
 
@@ -152,6 +180,10 @@
                     android:gravity="center"
                     android:text="Translate"
                     android:textSize="12sp"
+                    app:icon="@drawable/ic_languages"
+                    app:iconSize="20dp"
+                    app:iconTint="#6366F1"
+                    app:iconGravity="top"
                     app:cornerRadius="12dp" />
 
                 <com.google.android.material.button.MaterialButton

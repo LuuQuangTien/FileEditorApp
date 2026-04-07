@@ -79,7 +79,7 @@
                 android:layout_width="60dp"
                 android:layout_height="32dp"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_edittext"
+                android:background="@drawable/bg_edit_text"
                 android:entries="@array/font_sizes" />
 
             <View
@@ -159,20 +159,20 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_yellow_square" />
+                android:background="@drawable/bg_yellow_400_rounded" />
 
             <ImageButton
                 android:id="@+id/btn_bg_blue"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_blue_square" />
+                android:background="@drawable/bg_blue_500_rounded" />
 
             <ImageButton
                 android:id="@+id/btn_bg_green"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:background="@drawable/bg_green_square" />
+                android:background="@drawable/bg_green_500_rounded" />
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -204,7 +204,7 @@
             android:layout_height="36dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_edittext"
+            android:background="@drawable/bg_edit_text"
             android:hint="Enter value or formula (e.g., =A1+B1)"
             android:paddingHorizontal="12dp"
             android:textColor="#171717"

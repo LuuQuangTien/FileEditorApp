@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.ExcelEditorActivity;
 import hcmute.edu.vn.documentfileeditor.R;
 
 public class DocumentsFragment extends Fragment {
@@ -18,17 +19,20 @@ public class DocumentsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_documents, container, false);
 
-        int[] docIds = {R.id.card_doc_1, R.id.card_doc_2, R.id.card_doc_3};
-        for (int id : docIds) {
-            View card = view.findViewById(id);
-            if (card != null) {
-                card.setOnClickListener(v -> {
-                    android.content.Intent intent = new android.content.Intent(getActivity(), DocumentEditorActivity.class);
-                    startActivity(intent);
-                });
-            }
-        }
+        setupFileClick(view, R.id.card_doc_1, DocumentEditorActivity.class);
+        setupFileClick(view, R.id.card_doc_2, DocumentEditorActivity.class);
+        setupFileClick(view, R.id.card_doc_3, ExcelEditorActivity.class);
 
         return view;
+    }
+
+    private void setupFileClick(View view, int viewId, Class<?> activityClass) {
+        View card = view.findViewById(viewId);
+        if (card != null) {
+            card.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(getActivity(), activityClass);
+                startActivity(intent);
+            });
+        }
     }
 }

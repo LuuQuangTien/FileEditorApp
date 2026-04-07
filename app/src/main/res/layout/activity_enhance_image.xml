@@ -148,7 +148,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="top|end"
                         android:layout_margin="12dp"
-                        android:background="@drawable/badge_green_bg"
+                        android:background="@drawable/bg_green_100_rounded"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
@@ -380,7 +380,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_gradient_info_card"
+                android:background="@drawable/bg_blue_50_rounded"
                 android:orientation="vertical"
                 android:padding="16dp">
 

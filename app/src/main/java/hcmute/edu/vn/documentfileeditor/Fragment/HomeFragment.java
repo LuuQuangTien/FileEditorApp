@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.ExcelEditorActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.OcrActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.ScanActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.TranslateActivity;
@@ -55,15 +56,18 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupRecentFiles(View view) {
-        int[] recentIds = {R.id.card_recent_1, R.id.card_recent_2, R.id.card_recent_3};
-        for (int id : recentIds) {
-            View card = view.findViewById(id);
-            if (card != null) {
-                card.setOnClickListener(v -> {
-                    android.content.Intent intent = new android.content.Intent(getActivity(), DocumentEditorActivity.class);
-                    startActivity(intent);
-                });
-            }
+        setupFileClick(view, R.id.card_recent_1, DocumentEditorActivity.class);
+        setupFileClick(view, R.id.card_recent_2, ExcelEditorActivity.class);
+        setupFileClick(view, R.id.card_recent_3, DocumentEditorActivity.class);
+    }
+
+    private void setupFileClick(View view, int viewId, Class<?> activityClass) {
+        View card = view.findViewById(viewId);
+        if (card != null) {
+            card.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(getActivity(), activityClass);
+                startActivity(intent);
+            });
         }
     }
 }

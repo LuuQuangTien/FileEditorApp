@@ -13,4 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-APP_design/
+design_app/

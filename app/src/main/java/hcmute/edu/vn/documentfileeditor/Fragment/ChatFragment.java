@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -106,7 +107,6 @@ public class ChatFragment extends Fragment {
         @NonNull
         @Override
         public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // For a simpler approach natively creating the view
             LinearLayout layout = new LinearLayout(parent.getContext());
             layout.setLayoutParams(new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -114,7 +114,6 @@ public class ChatFragment extends Fragment {
             layout.setOrientation(LinearLayout.HORIZONTAL);
             layout.setPadding(0, 16, 0, 16);
 
-            // Icon background container
             LinearLayout iconContainer = new LinearLayout(parent.getContext());
             int iconSize = (int) (40 * parent.getContext().getResources().getDisplayMetrics().density);
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
@@ -122,7 +121,6 @@ public class ChatFragment extends Fragment {
             iconContainer.setId(View.generateViewId());
             iconContainer.setGravity(android.view.Gravity.CENTER);
 
-            // Message text container
             TextView tvContent = new TextView(parent.getContext());
             LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
@@ -142,30 +140,25 @@ public class ChatFragment extends Fragment {
         public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
             ChatMessage msg = messages.get(position);
             holder.tvContent.setText(msg.content);
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.tvContent.getLayoutParams();
 
             if ("user".equals(msg.role)) {
-                // User styles
-                holder.layout.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-                holder.tvContent.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-                
-                holder.tvContent.setBackgroundResource(R.drawable.badge_green_bg); 
-                holder.tvContent.getBackground().setTint(0xFF2563EB); // blue-600
-                holder.tvContent.setTextColor(0xFFFFFFFF);
-                
-                holder.iconContainer.setBackgroundResource(R.drawable.bg_edittext); // reuse rounded
-                holder.iconContainer.getBackground().setTint(0xFFE5E5E5);
-                
+                holder.layout.setGravity(android.view.Gravity.END);
+                params.setMargins(100, 0, 0, 0);
+                holder.tvContent.setLayoutParams(params);
+
+                holder.tvContent.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue_600));
+                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
+                holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.neutral_200));
+
             } else {
-                // Assistant styles
-                holder.layout.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-                holder.tvContent.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-                
-                holder.tvContent.setBackgroundResource(R.drawable.bg_edittext);
-                holder.tvContent.getBackground().setTint(0xFFFFFFFF);
-                holder.tvContent.setTextColor(0xFF171717);
-                
-                holder.iconContainer.setBackgroundResource(R.drawable.badge_green_bg);
-                holder.iconContainer.getBackground().setTint(0xFFDBEAFE); // blue-100
+                holder.layout.setGravity(android.view.Gravity.START);
+                params.setMargins(0, 0, 100, 0);
+                holder.tvContent.setLayoutParams(params);
+
+                holder.tvContent.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
+                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.neutral_700));
+                holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue_100));
             }
         }
 

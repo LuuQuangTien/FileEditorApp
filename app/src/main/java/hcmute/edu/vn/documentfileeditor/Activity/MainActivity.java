@@ -44,8 +44,6 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new DocumentsFragment();
             } else if (itemId == R.id.nav_tools) {
                 selectedFragment = new ToolsFragment();
-            } else if (itemId == R.id.nav_chat) {
-                selectedFragment = new hcmute.edu.vn.documentfileeditor.Fragment.ChatFragment();
             } else if (itemId == R.id.nav_profile) {
                 selectedFragment = new ProfileFragment();
             }

@@ -4,7 +4,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,7 +23,7 @@ public class ExcelEditorActivity extends AppCompatActivity {
     private ImageButton btnAlignLeft, btnAlignCenter, btnAlignRight;
     private ImageButton btnBgYellow, btnBgBlue, btnBgGreen;
 
-    private Map<String, CellData> sheetData = new HashMap<>();
+    private final Map<String, CellData> sheetData = new HashMap<>();
     private String selectedCell = "A1";
     private SpreadsheetAdapter adapter;
 
@@ -141,14 +143,16 @@ public class ExcelEditorActivity extends AppCompatActivity {
 
     private String evaluateFormula(String formula) {
         // Very basic formula evaluation for demo
-        try {
-            if (formula.equals("=B2*C2")) return "6000";
-            if (formula.equals("=B3*C3")) return "375";
-            if (formula.equals("=B4*C4")) return "750";
-        } catch (Exception e) {
-            return "#ERROR";
+        switch (formula) {
+            case "=B2*C2":
+                return "6000";
+            case "=B3*C3":
+                return "375";
+            case "=B4*C4":
+                return "750";
+            default:
+                return formula;
         }
-        return formula;
     }
 
     private void updateToolbarButtons() {
@@ -250,8 +254,9 @@ public class ExcelEditorActivity extends AppCompatActivity {
     // RecyclerView Adapter
     private class SpreadsheetAdapter extends RecyclerView.Adapter<SpreadsheetAdapter.CellViewHolder> {
 
+        @NonNull
         @Override
-        public CellViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public CellViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             TextView textView = new TextView(ExcelEditorActivity.this);
             // Height 40dp approx
             int heightPx = (int) (40 * getResources().getDisplayMetrics().density);
@@ -265,7 +270,7 @@ public class ExcelEditorActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(CellViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull CellViewHolder holder, int position) {
             int row = position / COLUMNS.length;
             int col = position % COLUMNS.length;
 
@@ -275,8 +280,13 @@ public class ExcelEditorActivity extends AppCompatActivity {
             int widthDp = (col == 0) ? 50 : 100;
             int widthPx = (int) (widthDp * getResources().getDisplayMetrics().density);
             ViewGroup.LayoutParams params = textView.getLayoutParams();
-            params.width = widthPx;
-            textView.setLayoutParams(params);
+            if (params != null) {
+                params.width = widthPx;
+                textView.setLayoutParams(params);
+            } else {
+                textView.setLayoutParams(new ViewGroup.LayoutParams(widthPx, 
+                    (int) (40 * getResources().getDisplayMetrics().density)));
+            }
 
             if (row == 0) {
                 // Header row
