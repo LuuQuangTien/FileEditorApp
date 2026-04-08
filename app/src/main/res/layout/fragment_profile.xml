@@ -85,19 +85,6 @@
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Upgrade to Premium"
-                android:textColor="@color/white"
-                app:icon="@drawable/ic_crown"
-                app:iconTint="@color/white"
-                app:iconGravity="textStart"
-                app:backgroundTint="#33FFFFFF"
-                app:strokeColor="#33FFFFFF"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
         </LinearLayout>
 
         <!-- Account Section -->

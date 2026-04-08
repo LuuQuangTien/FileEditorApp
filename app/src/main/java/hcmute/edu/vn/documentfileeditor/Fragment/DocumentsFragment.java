@@ -1,32 +1,361 @@
 package hcmute.edu.vn.documentfileeditor.Fragment;
 
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.List;
+import java.util.Locale;
 
 import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.ExcelEditorActivity;
+import hcmute.edu.vn.documentfileeditor.Adapter.LiveDocumentAdapter;
+import hcmute.edu.vn.documentfileeditor.Enum.FileType;
+import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
+import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
 
 public class DocumentsFragment extends Fragment {
+    private static final String TAG = "DocumentsFragment";
+    private LiveDocumentAdapter adapter;
+    private ProgressBar progressBar;
+    private TextView statusView;
+    private DocumentRepository documentRepository;
+    private ActivityResultLauncher<String[]> importDocumentLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setupImportLauncher();
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_documents, container, false);
 
-        setupFileClick(view, R.id.card_doc_1, DocumentEditorActivity.class);
-        setupFileClick(view, R.id.card_doc_2, DocumentEditorActivity.class);
-        setupFileClick(view, R.id.card_doc_3, ExcelEditorActivity.class);
+        documentRepository = DocumentRepository.getInstance(requireContext());
+        progressBar = view.findViewById(R.id.progress_documents);
+        statusView = view.findViewById(R.id.tv_documents_status);
+
+        setupRecyclerView(view);
+        setupFabActions(view);
+        setupRefreshAction(view);
+        setupMockFileClick(view, R.id.card_doc_1, DocumentEditorActivity.class);
+        setupMockFileClick(view, R.id.card_doc_2, DocumentEditorActivity.class);
+        setupMockFileClick(view, R.id.card_doc_3, ExcelEditorActivity.class);
+        loadDocuments();
 
         return view;
     }
 
-    private void setupFileClick(View view, int viewId, Class<?> activityClass) {
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isAdded() && documentRepository != null && adapter != null) {
+            loadDocuments();
+        }
+    }
+
+    private void setupRecyclerView(View view) {
+        RecyclerView recyclerView = view.findViewById(R.id.rv_documents);
+        adapter = new LiveDocumentAdapter(this::openLiveDocument, this::showDocumentMenu);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void setupImportLauncher() {
+        if (importDocumentLauncher != null) {
+            return;
+        }
+        importDocumentLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                this::handleImportedDocument
+        );
+    }
+
+    private void setupRefreshAction(View view) {
+        View filterButton = view.findViewById(R.id.btn_filter);
+        filterButton.setOnClickListener(v -> loadDocuments());
+    }
+
+    private void setupFabActions(View view) {
+        View fab = view.findViewById(R.id.fab_import_document);
+        fab.setOnClickListener(v -> showDocumentActionSheet());
+    }
+
+    private void showDocumentActionSheet() {
+        try {
+            BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+            View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_document_actions, null);
+            dialog.setContentView(sheetView);
+
+            if (sheetView == null) {
+                reportUiError("Could not open action sheet.", null);
+                return;
+            }
+
+            View importFile = sheetView.findViewById(R.id.action_import_file);
+            View newDocument = sheetView.findViewById(R.id.action_new_document);
+            View newSpreadsheet = sheetView.findViewById(R.id.action_new_spreadsheet);
+
+            importFile.setOnClickListener(v -> {
+                dialog.dismiss();
+                importDocumentLauncher.launch(new String[]{
+                        "application/pdf",
+                        "application/msword",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "application/vnd.ms-excel",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "image/*",
+                        "text/plain"
+                });
+            });
+
+            newDocument.setOnClickListener(v -> {
+                dialog.dismiss();
+                showCreateDialog(FileType.WORD);
+            });
+
+            newSpreadsheet.setOnClickListener(v -> {
+                dialog.dismiss();
+                showCreateDialog(FileType.EXCEL);
+            });
+
+            dialog.show();
+        } catch (Exception e) {
+            reportUiError("Failed to open add-document actions.", e);
+        }
+    }
+
+    private void showCreateDialog(FileType fileType) {
+        try {
+            EditText input = new EditText(requireContext());
+            input.setHint(fileType == FileType.EXCEL ? "Budget Plan" : "Project Notes");
+            input.setPadding(48, 32, 48, 32);
+
+            String title = fileType == FileType.EXCEL ? "Create spreadsheet" : "Create document";
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle(title)
+                    .setMessage("Enter a file name")
+                    .setView(input)
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Create", (dialog, which) -> {
+                        String rawName = input.getText().toString().trim();
+                        createNewDocument(rawName, fileType);
+                    })
+                    .show();
+        } catch (Exception e) {
+            reportUiError("Failed to open create dialog.", e);
+        }
+    }
+
+    private void createNewDocument(String rawName, FileType fileType) {
+        try {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user == null) {
+                showStatus("Please sign in before creating a document.");
+                return;
+            }
+
+            String fileName = buildFileName(rawName, fileType);
+            String initialContent = "";
+
+            DocumentFB document = new DocumentFB();
+            document.setUserId(user.getUid());
+            document.setFileName(fileName);
+            document.setFileType(fileType);
+
+            showLoading(true);
+            showStatus("Creating " + fileName + "...");
+
+            documentRepository.createDocument(requireContext(), document, initialContent, new DocumentCallback.UploadCallback() {
+                @Override
+                public void onSuccess(DocumentFB documentFB) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showLoading(false);
+                    showStatus("Created locally. Cloud sync will continue in background.");
+                    adapter.upsertItem(documentFB);
+                    Toast.makeText(requireContext(), "Created " + documentFB.getFileName(), Toast.LENGTH_SHORT).show();
+                    openLiveDocument(documentFB);
+                }
+
+                @Override
+                public void onProgress(int progressPercentage) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showStatus("Creating " + fileName + "... " + progressPercentage + "%");
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showLoading(false);
+                    reportUiError("Could not create " + fileName, e);
+                }
+            });
+        } catch (Exception e) {
+            showLoading(false);
+            reportUiError("Create document crashed before upload started.", e);
+        }
+    }
+
+    private String buildFileName(String rawName, FileType fileType) {
+        String trimmed = rawName == null ? "" : rawName.trim();
+        if (trimmed.isEmpty()) {
+            trimmed = fileType == FileType.EXCEL ? "New Spreadsheet" : "New Document";
+        }
+
+        String extension = fileType == FileType.EXCEL ? ".xlsx" : ".docx";
+        String lowerName = trimmed.toLowerCase(Locale.US);
+        if (!lowerName.endsWith(extension)) {
+            trimmed += extension;
+        }
+        return trimmed;
+    }
+
+    private void loadDocuments() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            showStatus("Please sign in to load your documents.");
+            return;
+        }
+
+        showLoading(true);
+        documentRepository.getDocuments(user.getUid(), new DocumentCallback.GetDocumentsCallback() {
+            @Override
+            public void onSuccess(List<DocumentFB> documents) {
+                if (!isAdded()) {
+                    return;
+                }
+                showLoading(false);
+                adapter.submitList(documents);
+                if (documents.isEmpty()) {
+                    showStatus("No live documents yet. Mock cards below are still available for UI testing.");
+                } else {
+                    hideStatus();
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isAdded()) {
+                    return;
+                }
+                showLoading(false);
+                if (adapter.getItemCount() == 0) {
+                    showStatus("Could not load live documents. You can still test the static mock cards below.");
+                }
+            }
+        });
+    }
+
+    private void handleImportedDocument(Uri uri) {
+        try {
+            if (uri == null || !isAdded()) {
+                return;
+            }
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user == null) {
+                showStatus("Please sign in before importing a document.");
+                return;
+            }
+
+            try {
+                requireContext().getContentResolver().takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                );
+            } catch (SecurityException ignored) {
+            }
+
+            String fileName = resolveFileName(uri);
+            DocumentFB document = new DocumentFB();
+            document.setUserId(user.getUid());
+            document.setFileName(fileName);
+            document.setFileType(resolveFileType(fileName, requireContext().getContentResolver().getType(uri)));
+
+            showLoading(true);
+            showStatus("Importing " + fileName + "...");
+            documentRepository.uploadDocument(requireContext(), uri, document, new DocumentCallback.UploadCallback() {
+                @Override
+                public void onSuccess(DocumentFB documentFB) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showLoading(false);
+                    adapter.upsertItem(documentFB);
+                    Toast.makeText(requireContext(), "Imported " + documentFB.getFileName(), Toast.LENGTH_SHORT).show();
+                    showStatus("Imported locally. Cloud sync will continue in background.");
+                }
+
+                @Override
+                public void onProgress(int progressPercentage) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showStatus("Importing " + fileName + "... " + progressPercentage + "%");
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    showLoading(false);
+                    reportUiError("Could not import " + fileName, e);
+                }
+            });
+        } catch (Exception e) {
+            showLoading(false);
+            reportUiError("Import flow crashed before upload started.", e);
+        }
+    }
+
+    private void showLoading(boolean isLoading) {
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+    }
+
+    private void showStatus(String message) {
+        statusView.setText(message);
+        statusView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideStatus() {
+        statusView.setVisibility(View.GONE);
+    }
+
+    private void setupMockFileClick(View view, int viewId, Class<?> activityClass) {
         View card = view.findViewById(viewId);
         if (card != null) {
             card.setOnClickListener(v -> {
@@ -34,5 +363,186 @@ public class DocumentsFragment extends Fragment {
                 startActivity(intent);
             });
         }
+    }
+
+    private void openLiveDocument(DocumentFB document) {
+        try {
+            if ((document.getLocalPath() == null || document.getLocalPath().isEmpty())
+                    && document.getCloudStorageUrl() != null
+                    && !document.getCloudStorageUrl().isEmpty()) {
+                showLoading(true);
+                showStatus("Downloading " + document.getFileName() + "...");
+                documentRepository.downloadIfNeeded(requireContext(), document, new DocumentCallback.DownloadCallback() {
+                    @Override
+                    public void onSuccess(String localPath) {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        showLoading(false);
+                        hideStatus();
+                        document.setLocalPath(localPath);
+                        launchEditor(document);
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        showLoading(false);
+                        reportUiError("Could not download " + document.getFileName(), e);
+                    }
+                });
+                return;
+            }
+
+            launchEditor(document);
+        } catch (Exception e) {
+            showLoading(false);
+            reportUiError("Open document crashed.", e);
+        }
+    }
+
+    private void launchEditor(DocumentFB document) {
+        try {
+            Class<?> targetActivity = document.getFileType() == FileType.EXCEL
+                    ? ExcelEditorActivity.class
+                    : DocumentEditorActivity.class;
+
+            android.content.Intent intent = new android.content.Intent(requireContext(), targetActivity);
+            intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_ID, document.getId());
+            intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_NAME, document.getFileName());
+            intent.putExtra(DocumentEditorActivity.EXTRA_LOCAL_PATH, document.getLocalPath());
+            intent.putExtra(DocumentEditorActivity.EXTRA_CLOUD_URL, document.getCloudStorageUrl());
+            intent.putExtra(DocumentEditorActivity.EXTRA_FILE_TYPE, document.getFileType() != null ? document.getFileType().name() : null);
+            startActivity(intent);
+        } catch (Exception e) {
+            reportUiError("Failed to launch editor for " + document.getFileName(), e);
+        }
+    }
+
+    private void showDocumentMenu(View anchor, DocumentFB document) {
+        android.widget.PopupMenu popupMenu = new android.widget.PopupMenu(requireContext(), anchor);
+        popupMenu.getMenu().add("Delete");
+        popupMenu.getMenu().add("Refresh");
+        if (document.getCloudStorageUrl() == null || document.getCloudStorageUrl().isEmpty()) {
+            popupMenu.getMenu().add("Retry sync");
+        }
+        popupMenu.setOnMenuItemClickListener(item -> {
+            String title = item.getTitle().toString();
+            if ("Delete".equals(title)) {
+                confirmDeleteDocument(document);
+                return true;
+            }
+            if ("Refresh".equals(title)) {
+                loadDocuments();
+                return true;
+            }
+            if ("Retry sync".equals(title)) {
+                documentRepository.retrySync(document);
+                showStatus("Retrying cloud sync for " + document.getFileName() + "...");
+                return true;
+            }
+            return false;
+        });
+        popupMenu.show();
+    }
+
+    private void confirmDeleteDocument(DocumentFB document) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete document")
+                .setMessage("Delete " + document.getFileName() + "?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete", (dialog, which) -> deleteDocument(document))
+                .show();
+    }
+
+    private void deleteDocument(DocumentFB document) {
+        showLoading(true);
+        showStatus("Deleting " + document.getFileName() + "...");
+        documentRepository.deleteDocument(document, new DocumentCallback.SimpleCallback() {
+            @Override
+            public void onSuccess() {
+                if (!isAdded()) {
+                    return;
+                }
+                showLoading(false);
+                Toast.makeText(requireContext(), "Deleted " + document.getFileName(), Toast.LENGTH_SHORT).show();
+                loadDocuments();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isAdded()) {
+                    return;
+                }
+                showLoading(false);
+                reportUiError("Could not delete " + document.getFileName(), e);
+            }
+        });
+    }
+
+    private void reportUiError(String message, Exception e) {
+        if (e != null) {
+            Log.e(TAG, message, e);
+        } else {
+            Log.e(TAG, message);
+        }
+
+        String detail = e != null && e.getMessage() != null && !e.getMessage().isEmpty()
+                ? e.getClass().getSimpleName() + ": " + e.getMessage()
+                : "No exception message available";
+
+        String fullMessage = message + "\n" + detail;
+        showStatus(fullMessage);
+
+        if (isAdded()) {
+            Toast.makeText(requireContext(), fullMessage, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String resolveFileName(Uri uri) {
+        Cursor cursor = requireContext().getContentResolver().query(
+                uri,
+                new String[]{OpenableColumns.DISPLAY_NAME},
+                null,
+                null,
+                null
+        );
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex >= 0) {
+                        String displayName = cursor.getString(nameIndex);
+                        if (displayName != null && !displayName.isEmpty()) {
+                            return displayName;
+                        }
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return "Imported file " + System.currentTimeMillis();
+    }
+
+    private FileType resolveFileType(String fileName, String mimeType) {
+        String lowerName = fileName == null ? "" : fileName.toLowerCase(Locale.US);
+        String lowerMimeType = mimeType == null ? "" : mimeType.toLowerCase(Locale.US);
+
+        if (lowerName.endsWith(".pdf") || lowerMimeType.contains("pdf")) {
+            return FileType.PDF;
+        }
+        if (lowerName.endsWith(".xls") || lowerName.endsWith(".xlsx") || lowerMimeType.contains("excel") || lowerMimeType.contains("spreadsheet")) {
+            return FileType.EXCEL;
+        }
+        if (lowerName.endsWith(".doc") || lowerName.endsWith(".docx") || lowerMimeType.contains("word") || lowerName.endsWith(".txt") || lowerMimeType.contains("text")) {
+            return FileType.WORD;
+        }
+        if (lowerMimeType.startsWith("image/") || lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png")) {
+            return FileType.IMAGE;
+        }
+        return FileType.OTHER;
     }
 }

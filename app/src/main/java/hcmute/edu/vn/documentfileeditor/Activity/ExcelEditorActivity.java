@@ -5,39 +5,67 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.PopupMenu;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import hcmute.edu.vn.documentfileeditor.Enum.FileType;
+import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
+import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
-import java.util.*;
 
 public class ExcelEditorActivity extends AppCompatActivity {
-
     private EditText etFormula;
     private TextView tvCellRef;
     private RecyclerView rvSpreadsheet;
     private Spinner spinnerFontSize;
-    private ImageButton btnBold, btnItalic, btnUnderline;
-    private ImageButton btnAlignLeft, btnAlignCenter, btnAlignRight;
-    private ImageButton btnBgYellow, btnBgBlue, btnBgGreen;
+    private ImageButton btnBold;
+    private ImageButton btnItalic;
+    private ImageButton btnUnderline;
+    private ImageButton btnAlignLeft;
+    private ImageButton btnAlignCenter;
+    private ImageButton btnAlignRight;
+    private ImageButton btnBgYellow;
+    private ImageButton btnBgBlue;
+    private ImageButton btnBgGreen;
 
     private final Map<String, CellData> sheetData = new HashMap<>();
     private String selectedCell = "A1";
     private SpreadsheetAdapter adapter;
+    private DocumentRepository documentRepository;
+    private DocumentFB currentDocument;
 
     private static final String[] COLUMNS = {"", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
-    private static final int ROWS = 21; // 20 data rows + 1 header
+    private static final int ROWS = 21;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_excel_editor);
 
+        documentRepository = DocumentRepository.getInstance(this);
         initializeViews();
         initializeData();
         setupListeners();
+        bindDocumentInfo();
     }
 
     private void initializeViews() {
@@ -61,7 +89,7 @@ public class ExcelEditorActivity extends AppCompatActivity {
     }
 
     private void initializeData() {
-        // Initialize sample data
+        sheetData.clear();
         sheetData.put("A1", new CellData("Product"));
         sheetData.put("B1", new CellData("Quantity"));
         sheetData.put("C1", new CellData("Price"));
@@ -70,32 +98,22 @@ public class ExcelEditorActivity extends AppCompatActivity {
         sheetData.put("B2", new CellData("5"));
         sheetData.put("C2", new CellData("1200"));
         sheetData.put("D2", new CellData("6000", "=B2*C2"));
-        sheetData.put("A3", new CellData("Mouse"));
-        sheetData.put("B3", new CellData("15"));
-        sheetData.put("C3", new CellData("25"));
-        sheetData.put("D3", new CellData("375", "=B3*C3"));
-        sheetData.put("A4", new CellData("Keyboard"));
-        sheetData.put("B4", new CellData("10"));
-        sheetData.put("C4", new CellData("75"));
-        sheetData.put("D4", new CellData("750", "=B4*C4"));
-
         updateFormulaBar();
     }
 
     private void setupListeners() {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-
-        findViewById(R.id.btn_save).setOnClickListener(v ->
-            Toast.makeText(this, "Spreadsheet saved!", Toast.LENGTH_SHORT).show());
-
+        findViewById(R.id.btn_save).setOnClickListener(v -> saveSpreadsheet());
         findViewById(R.id.btn_more).setOnClickListener(v -> showMoreMenu());
 
         etFormula.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -103,7 +121,6 @@ public class ExcelEditorActivity extends AppCompatActivity {
             }
         });
 
-        // Formatting buttons
         btnBold.setOnClickListener(v -> toggleBold());
         btnItalic.setOnClickListener(v -> toggleItalic());
         btnUnderline.setOnClickListener(v -> toggleUnderline());
@@ -113,6 +130,115 @@ public class ExcelEditorActivity extends AppCompatActivity {
         btnBgYellow.setOnClickListener(v -> setBackgroundColor("#FEF3C7"));
         btnBgBlue.setOnClickListener(v -> setBackgroundColor("#DBEAFE"));
         btnBgGreen.setOnClickListener(v -> setBackgroundColor("#DCFCE7"));
+    }
+
+    private void bindDocumentInfo() {
+        TextView tvSheetTitle = findViewById(R.id.tv_sheet_title);
+
+        currentDocument = new DocumentFB();
+        currentDocument.setId(getIntent().getStringExtra(DocumentEditorActivity.EXTRA_DOCUMENT_ID));
+        currentDocument.setUserId(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null);
+        currentDocument.setFileName(getIntent().getStringExtra(DocumentEditorActivity.EXTRA_DOCUMENT_NAME));
+        currentDocument.setLocalPath(getIntent().getStringExtra(DocumentEditorActivity.EXTRA_LOCAL_PATH));
+        currentDocument.setCloudStorageUrl(getIntent().getStringExtra(DocumentEditorActivity.EXTRA_CLOUD_URL));
+        currentDocument.setFileType(FileType.EXCEL);
+
+        if (currentDocument.getFileName() != null && !currentDocument.getFileName().isEmpty()) {
+            tvSheetTitle.setText(currentDocument.getFileName());
+        }
+
+        String serialized = readTextFromLocalFile(currentDocument.getLocalPath());
+        if (serialized != null && !serialized.isEmpty()) {
+            loadSheetData(serialized);
+        }
+    }
+
+    private String readTextFromLocalFile(String localPath) {
+        if (localPath == null || localPath.isEmpty()) {
+            return null;
+        }
+        try {
+            File file = new File(localPath);
+            if (!file.exists()) {
+                return null;
+            }
+            InputStream input = getContentResolver().openInputStream(android.net.Uri.fromFile(file));
+            if (input == null) {
+                return null;
+            }
+            byte[] bytes = new byte[(int) file.length()];
+            int read = input.read(bytes);
+            input.close();
+            if (read <= 0) {
+                return null;
+            }
+            return new String(bytes, 0, read, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private void loadSheetData(String serialized) {
+        sheetData.clear();
+        String[] lines = serialized.split("\n");
+        for (String line : lines) {
+            String[] parts = line.split("\t", -1);
+            if (parts.length >= 2) {
+                CellData cellData = new CellData(parts[1]);
+                if (parts.length >= 3 && !parts[2].isEmpty()) {
+                    cellData.formula = parts[2];
+                }
+                sheetData.put(parts[0], cellData);
+            }
+        }
+        adapter.notifyDataSetChanged();
+        updateFormulaBar();
+    }
+
+    private void saveSpreadsheet() {
+        if (currentDocument == null || currentDocument.getLocalPath() == null || currentDocument.getLocalPath().isEmpty()) {
+            Toast.makeText(this, "Spreadsheet path is unavailable.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<String, CellData> entry : sheetData.entrySet()) {
+            CellData cellData = entry.getValue();
+            builder.append(entry.getKey())
+                    .append('\t')
+                    .append(cellData.value == null ? "" : cellData.value.replace("\n", " "))
+                    .append('\t')
+                    .append(cellData.formula == null ? "" : cellData.formula.replace("\n", " "))
+                    .append('\n');
+        }
+
+        try {
+            FileOutputStream output = new FileOutputStream(new File(currentDocument.getLocalPath()), false);
+            output.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+            output.close();
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not save spreadsheet locally.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        documentRepository.saveDocument(currentDocument, new DocumentCallback.UploadCallback() {
+            @Override
+            public void onSuccess(DocumentFB documentFB) {
+                currentDocument = documentFB;
+                Toast.makeText(ExcelEditorActivity.this, "Spreadsheet saved locally. Cloud sync continues in background.", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onProgress(int progressPercentage) {
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(ExcelEditorActivity.this, "Save failed.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateFormulaBar() {
@@ -135,21 +261,17 @@ public class ExcelEditorActivity extends AppCompatActivity {
         cellData.value = value;
         if (value.startsWith("=")) {
             cellData.formula = value;
-            // Simple formula evaluation (just for demo)
             cellData.value = evaluateFormula(value);
+        } else {
+            cellData.formula = null;
         }
         adapter.notifyDataSetChanged();
     }
 
     private String evaluateFormula(String formula) {
-        // Very basic formula evaluation for demo
         switch (formula) {
             case "=B2*C2":
                 return "6000";
-            case "=B3*C3":
-                return "375";
-            case "=B4*C4":
-                return "750";
             default:
                 return formula;
         }
@@ -161,7 +283,6 @@ public class ExcelEditorActivity extends AppCompatActivity {
             btnBold.setSelected(cellData.style.bold);
             btnItalic.setSelected(cellData.style.italic);
             btnUnderline.setSelected(cellData.style.underline);
-            // Update alignment buttons based on style.align
         }
     }
 
@@ -223,7 +344,6 @@ public class ExcelEditorActivity extends AppCompatActivity {
         popup.show();
     }
 
-    // Cell data model
     private static class CellData {
         String value;
         String formula;
@@ -251,17 +371,13 @@ public class ExcelEditorActivity extends AppCompatActivity {
         String fontSize = "14";
     }
 
-    // RecyclerView Adapter
     private class SpreadsheetAdapter extends RecyclerView.Adapter<SpreadsheetAdapter.CellViewHolder> {
-
         @NonNull
         @Override
         public CellViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             TextView textView = new TextView(ExcelEditorActivity.this);
-            // Height 40dp approx
             int heightPx = (int) (40 * getResources().getDisplayMetrics().density);
-            textView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, heightPx));
+            textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, heightPx));
             textView.setPadding(16, 8, 16, 8);
             textView.setBackgroundResource(R.drawable.cell_border);
             textView.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -273,56 +389,54 @@ public class ExcelEditorActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull CellViewHolder holder, int position) {
             int row = position / COLUMNS.length;
             int col = position % COLUMNS.length;
-
             TextView textView = (TextView) holder.itemView;
-            
-            // Set dynamic width based on whether it is a row header
+
             int widthDp = (col == 0) ? 50 : 100;
             int widthPx = (int) (widthDp * getResources().getDisplayMetrics().density);
             ViewGroup.LayoutParams params = textView.getLayoutParams();
-            if (params != null) {
-                params.width = widthPx;
-                textView.setLayoutParams(params);
-            } else {
-                textView.setLayoutParams(new ViewGroup.LayoutParams(widthPx, 
-                    (int) (40 * getResources().getDisplayMetrics().density)));
-            }
+            params.width = widthPx;
+            textView.setLayoutParams(params);
 
             if (row == 0) {
-                // Header row
                 textView.setText(COLUMNS[col]);
                 textView.setBackgroundColor(0xFFE5E7EB);
                 textView.setTypeface(null, android.graphics.Typeface.BOLD);
             } else if (col == 0) {
-                // Row numbers
                 textView.setText(String.valueOf(row));
                 textView.setBackgroundColor(0xFFE5E7EB);
                 textView.setTypeface(null, android.graphics.Typeface.BOLD);
             } else {
-                // Data cells
                 String cellKey = COLUMNS[col] + row;
                 CellData cellData = sheetData.get(cellKey);
                 String displayText = cellData != null ? cellData.value : "";
 
                 textView.setText(displayText);
                 textView.setBackgroundColor(android.graphics.Color.parseColor(
-                    cellData != null && cellData.style != null ? cellData.style.bgColor : "#FFFFFF"));
+                        cellData != null && cellData.style != null ? cellData.style.bgColor : "#FFFFFF"));
 
-                // Apply text style
                 int typeface = android.graphics.Typeface.NORMAL;
                 if (cellData != null && cellData.style != null) {
-                    if (cellData.style.bold) typeface |= android.graphics.Typeface.BOLD;
-                    if (cellData.style.italic) typeface |= android.graphics.Typeface.ITALIC;
+                    if (cellData.style.bold) {
+                        typeface |= android.graphics.Typeface.BOLD;
+                    }
+                    if (cellData.style.italic) {
+                        typeface |= android.graphics.Typeface.ITALIC;
+                    }
                 }
                 textView.setTypeface(null, typeface);
 
-                // Apply alignment
                 int gravity = android.view.Gravity.CENTER_VERTICAL;
                 if (cellData != null && cellData.style != null) {
-                    switch (cellData.style.align) {
-                        case "center": gravity |= android.view.Gravity.CENTER_HORIZONTAL; break;
-                        case "right": gravity |= android.view.Gravity.END; break;
-                        default: gravity |= android.view.Gravity.START; break;
+                    switch (cellData.style.align.toLowerCase(Locale.US)) {
+                        case "center":
+                            gravity |= android.view.Gravity.CENTER_HORIZONTAL;
+                            break;
+                        case "right":
+                            gravity |= android.view.Gravity.END;
+                            break;
+                        default:
+                            gravity |= android.view.Gravity.START;
+                            break;
                     }
                 } else {
                     gravity |= android.view.Gravity.START;

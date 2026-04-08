@@ -1,40 +1,31 @@
 package hcmute.edu.vn.documentfileeditor.Model.Entity;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import hcmute.edu.vn.documentfileeditor.Enum.FileType;
 
-public class DocumentFB {
-    private String id;
+@Entity(tableName = "documents")
+public class DocumentEntity {
+    @PrimaryKey
+    @NonNull
+    private String id = "";
     private String userId;
     private String fileName;
-    private FileType fileType; // Kiểu file dùng Enum
-    private String cloudStorageUrl; // URL tải file trừ Firebase Storage
-    private String localPath; // Đường dẫn cache ở máy (Offline)
+    private FileType fileType;
+    private String cloudStorageUrl;
+    private String localPath;
     private long sizeBytes;
     private long createdDate;
     private long lastModified;
 
-    // Required empty constructor for Firebase DataSnapshot binding
-    public DocumentFB() {
-    }
-
-    public DocumentFB(String id, String userId, String fileName, FileType fileType, String cloudStorageUrl,
-            String localPath, long sizeBytes, long createdDate, long lastModified) {
-        this.id = id;
-        this.userId = userId;
-        this.fileName = fileName;
-        this.fileType = fileType;
-        this.cloudStorageUrl = cloudStorageUrl;
-        this.localPath = localPath;
-        this.sizeBytes = sizeBytes;
-        this.createdDate = createdDate;
-        this.lastModified = lastModified;
-    }
-
+    @NonNull
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(@NonNull String id) {
         this.id = id;
     }
 

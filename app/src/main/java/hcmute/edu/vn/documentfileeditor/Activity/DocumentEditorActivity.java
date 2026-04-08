@@ -23,27 +23,46 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.documentfileeditor.Enum.FileType;
+import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
+import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
 
 public class DocumentEditorActivity extends AppCompatActivity {
+    public static final String EXTRA_DOCUMENT_ID = "extra_document_id";
+    public static final String EXTRA_DOCUMENT_NAME = "extra_document_name";
+    public static final String EXTRA_LOCAL_PATH = "extra_local_path";
+    public static final String EXTRA_CLOUD_URL = "extra_cloud_url";
+    public static final String EXTRA_FILE_TYPE = "extra_file_type";
+
+    private DocumentRepository documentRepository;
+    private DocumentFB currentDocument;
+    private EditText editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_document_editor);
 
-        // Back button
+        documentRepository = DocumentRepository.getInstance(this);
+        editor = findViewById(R.id.et_editor);
+        bindDocumentInfo();
+
         ImageView btnBack = findViewById(R.id.btn_back);
         btnBack.setOnClickListener(v -> finish());
 
-        // Save button
         MaterialButton btnSave = findViewById(R.id.btn_save);
-        btnSave.setOnClickListener(v -> Toast.makeText(this, "Document saved!", Toast.LENGTH_SHORT).show());
+        btnSave.setOnClickListener(v -> saveDocument());
 
-        // More button
         ImageView btnMore = findViewById(R.id.btn_more);
         btnMore.setOnClickListener(v -> {
             android.widget.PopupMenu popup = new android.widget.PopupMenu(this, v);
@@ -57,12 +76,10 @@ public class DocumentEditorActivity extends AppCompatActivity {
             popup.show();
         });
 
-        // Formatting buttons with toggle highlight
         setupFormatToggle(R.id.btn_bold);
         setupFormatToggle(R.id.btn_italic);
         setupFormatToggle(R.id.btn_underline);
 
-        // Non-toggle formatting
         int[] simpleButtons = {
                 R.id.btn_align_left, R.id.btn_align_center, R.id.btn_align_right,
                 R.id.btn_list, R.id.btn_list_ordered, R.id.btn_insert_image
@@ -71,9 +88,93 @@ public class DocumentEditorActivity extends AppCompatActivity {
             findViewById(id).setOnClickListener(v -> Toast.makeText(this, "Format action", Toast.LENGTH_SHORT).show());
         }
 
-        // AI FAB
         FrameLayout fabAi = findViewById(R.id.fab_ai);
         fabAi.setOnClickListener(v -> showAIBottomSheet());
+    }
+
+    private void bindDocumentInfo() {
+        TextView tvTitle = findViewById(R.id.tv_doc_title);
+
+        currentDocument = new DocumentFB();
+        currentDocument.setId(getIntent().getStringExtra(EXTRA_DOCUMENT_ID));
+        currentDocument.setUserId(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null);
+        currentDocument.setFileName(getIntent().getStringExtra(EXTRA_DOCUMENT_NAME));
+        currentDocument.setLocalPath(getIntent().getStringExtra(EXTRA_LOCAL_PATH));
+        currentDocument.setCloudStorageUrl(getIntent().getStringExtra(EXTRA_CLOUD_URL));
+
+        String fileTypeName = getIntent().getStringExtra(EXTRA_FILE_TYPE);
+        try {
+            currentDocument.setFileType(fileTypeName != null ? FileType.valueOf(fileTypeName) : FileType.WORD);
+        } catch (IllegalArgumentException e) {
+            currentDocument.setFileType(FileType.WORD);
+        }
+
+        if (currentDocument.getFileName() != null && !currentDocument.getFileName().isEmpty()) {
+            tvTitle.setText(currentDocument.getFileName());
+        }
+
+        String content = readTextFromLocalFile(currentDocument.getLocalPath());
+        editor.setText(content == null || content.isEmpty() ? "Start writing here..." : content);
+    }
+
+    private String readTextFromLocalFile(String localPath) {
+        if (localPath == null || localPath.isEmpty()) {
+            return null;
+        }
+        try {
+            File file = new File(localPath);
+            if (!file.exists()) {
+                return null;
+            }
+            InputStream input = getContentResolver().openInputStream(android.net.Uri.fromFile(file));
+            if (input == null) {
+                return null;
+            }
+            byte[] bytes = new byte[(int) file.length()];
+            int read = input.read(bytes);
+            input.close();
+            if (read <= 0) {
+                return null;
+            }
+            return new String(bytes, 0, read, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private void saveDocument() {
+        if (currentDocument == null || currentDocument.getLocalPath() == null || currentDocument.getLocalPath().isEmpty()) {
+            Toast.makeText(this, "Document path is unavailable.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            FileOutputStream output = new FileOutputStream(new File(currentDocument.getLocalPath()), false);
+            output.write(editor.getText().toString().getBytes(StandardCharsets.UTF_8));
+            output.close();
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not save local file.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        documentRepository.saveDocument(currentDocument, new DocumentCallback.UploadCallback() {
+            @Override
+            public void onSuccess(DocumentFB documentFB) {
+                currentDocument = documentFB;
+                Toast.makeText(DocumentEditorActivity.this, "Document saved locally. Cloud sync continues in background.", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onProgress(int progressPercentage) {
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(DocumentEditorActivity.this, "Save failed.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupFormatToggle(int viewId) {
@@ -81,11 +182,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
         btn.setOnClickListener(v -> {
             boolean selected = !v.isSelected();
             v.setSelected(selected);
-            if (selected) {
-                v.setBackgroundColor(getResources().getColor(R.color.blue_100, null));
-            } else {
-                v.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-            }
+            v.setBackgroundColor(selected ? getResources().getColor(R.color.blue_100, null) : android.graphics.Color.TRANSPARENT);
         });
     }
 
@@ -97,64 +194,44 @@ public class DocumentEditorActivity extends AppCompatActivity {
         LinearLayout suggestionArea = sheetView.findViewById(R.id.ai_suggestion_area);
         TextView tvSuggestion = sheetView.findViewById(R.id.tv_ai_suggestion);
 
-        // Open Chat button
         sheetView.findViewById(R.id.btn_open_chat).setOnClickListener(v -> {
             dialog.dismiss();
             openChatBottomSheet();
         });
 
-        // AI Action buttons
         sheetView.findViewById(R.id.btn_ai_improve).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.VISIBLE);
-            tvSuggestion.setText(
-                    "Enhanced version:\n\nThis document serves as an exemplary template. Feel free to modify this content and leverage advanced AI capabilities to refine your composition.\n\nAccess the AI assistant to receive professional writing guidance, comprehensive grammar corrections, and intelligent content recommendations.");
+            tvSuggestion.setText("Enhanced version:\n\nImprove clarity, structure, and tone for this document.");
         });
-
         sheetView.findViewById(R.id.btn_ai_fix).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.VISIBLE);
-            tvSuggestion.setText(
-                    "Grammar corrections applied:\n- Fixed punctuation\n- Corrected spelling\n- Improved sentence structure\n\nYour text is now grammatically correct!");
+            tvSuggestion.setText("Grammar corrections applied:\n- Fixed punctuation\n- Corrected spelling\n- Improved sentence structure");
         });
-
         sheetView.findViewById(R.id.btn_ai_shorten).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.VISIBLE);
-            tvSuggestion.setText(
-                    "Condensed version:\n\nEditable sample document. Use AI features for writing improvements.\n\nClick AI button for assistance, corrections, and suggestions.");
+            tvSuggestion.setText("Condensed version:\n\nShorter and more direct content.");
         });
-
         sheetView.findViewById(R.id.btn_ai_expand).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.VISIBLE);
-            tvSuggestion.setText(
-                    "Expanded version:\n\nThis comprehensive document serves as a detailed sample template for your editing needs. You have complete freedom to modify and customize this text according to your requirements. Additionally, you can harness the power of artificial intelligence features to significantly enhance and improve the quality of your writing.");
+            tvSuggestion.setText("Expanded version:\n\nMore detailed content with fuller explanations.");
         });
-
         sheetView.findViewById(R.id.btn_ai_translate).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.VISIBLE);
-            tvSuggestion.setText(
-                    "Translated to Vietnamese:\n\nĐây là một tài liệu mẫu. Bạn có thể chỉnh sửa văn bản này và sử dụng các tính năng AI để cải thiện bài viết của mình.\n\nNhấp vào nút AI để nhận trợ giúp viết, sửa lỗi ngữ pháp và đề xuất nội dung.");
+            tvSuggestion.setText("Translated text:\n\nBan dich se hien thi tai day.");
         });
+        sheetView.findViewById(R.id.btn_ai_edit_image).setOnClickListener(v ->
+                Toast.makeText(this, "Edit Image coming soon", Toast.LENGTH_SHORT).show());
 
-        sheetView.findViewById(R.id.btn_ai_edit_image).setOnClickListener(v -> {
-            Toast.makeText(this, "Edit Image coming soon", Toast.LENGTH_SHORT).show();
-        });
-
-        // Apply suggestion
         sheetView.findViewById(R.id.btn_apply_suggestion).setOnClickListener(v -> {
             String suggestion = tvSuggestion.getText().toString();
             if (!suggestion.isEmpty()) {
-                android.widget.EditText editor = findViewById(R.id.et_editor);
                 String[] lines = suggestion.split("\n", 2);
-                if (lines.length > 1) {
-                    editor.setText(lines[1].trim());
-                } else {
-                    editor.setText(suggestion);
-                }
+                editor.setText(lines.length > 1 ? lines[1].trim() : suggestion);
                 Toast.makeText(this, "AI suggestion applied!", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
 
-        // Dismiss suggestion
         sheetView.findViewById(R.id.btn_dismiss_suggestion).setOnClickListener(v -> {
             suggestionArea.setVisibility(View.GONE);
             tvSuggestion.setText("");
@@ -168,7 +245,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         View sheetView = getLayoutInflater().inflate(R.layout.fragment_chat, null);
         dialog.setContentView(sheetView);
 
-        // Make bottom sheet expand fully
         FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) {
             bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
@@ -182,7 +258,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         ImageButton btnSend = sheetView.findViewById(R.id.btn_send);
 
         List<ChatMessage> messageList = new ArrayList<>();
-        // Add initial bot message
         messageList.add(new ChatMessage("assistant", "Hello! I'm your AI assistant. How can I help you improve your document today?"));
 
         ChatAdapter adapter = new ChatAdapter(messageList);
@@ -191,34 +266,24 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
         btnSend.setOnClickListener(v -> {
             String input = etInput.getText().toString().trim();
-            if (input.isEmpty()) return;
-
-            // Add user message
+            if (input.isEmpty()) {
+                return;
+            }
             messageList.add(new ChatMessage("user", input));
             adapter.notifyItemInserted(messageList.size() - 1);
             rvMessages.scrollToPosition(messageList.size() - 1);
             etInput.setText("");
 
-            // Simulate thinking and response
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                String[] responses = {
-                    "I can certainly help with that formatting.",
-                    "Here's what I suggest for your document: ...",
-                    "Based on your text, I think we should expand the second paragraph.",
-                    "Let me fix the grammar for you right away!"
-                };
-                String reply = responses[(int)(Math.random() * responses.length)];
-                
-                messageList.add(new ChatMessage("assistant", reply));
+                messageList.add(new ChatMessage("assistant", "I can help revise that section."));
                 adapter.notifyItemInserted(messageList.size() - 1);
                 rvMessages.scrollToPosition(messageList.size() - 1);
-            }, 1000);
+            }, 800);
         });
 
         dialog.show();
     }
 
-    // Chat Message Model
     private static class ChatMessage {
         String role;
         String content;
@@ -229,7 +294,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
     }
 
-    // Chat Adapter logic matching fragment_chat.xml style
     private static class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
         private final List<ChatMessage> messages;
 
@@ -241,31 +305,24 @@ public class DocumentEditorActivity extends AppCompatActivity {
         @Override
         public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LinearLayout layout = new LinearLayout(parent.getContext());
-            layout.setLayoutParams(new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT));
+            layout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             layout.setOrientation(LinearLayout.HORIZONTAL);
             layout.setPadding(0, 16, 0, 16);
 
             LinearLayout iconContainer = new LinearLayout(parent.getContext());
             int iconSize = (int) (40 * parent.getContext().getResources().getDisplayMetrics().density);
-            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
-            iconContainer.setLayoutParams(iconParams);
-            iconContainer.setId(View.generateViewId());
+            iconContainer.setLayoutParams(new LinearLayout.LayoutParams(iconSize, iconSize));
             iconContainer.setGravity(android.view.Gravity.CENTER);
 
             TextView tvContent = new TextView(parent.getContext());
-            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
             textParams.setMargins(24, 0, 24, 0);
             tvContent.setLayoutParams(textParams);
-            tvContent.setId(View.generateViewId());
             tvContent.setPadding(32, 32, 32, 32);
             tvContent.setTextSize(14f);
 
             layout.addView(iconContainer);
             layout.addView(tvContent);
-
             return new ChatViewHolder(layout, iconContainer, tvContent);
         }
 
@@ -278,21 +335,17 @@ public class DocumentEditorActivity extends AppCompatActivity {
             if ("user".equals(msg.role)) {
                 holder.layout.setGravity(android.view.Gravity.END);
                 params.setMargins(100, 0, 0, 0);
-                holder.tvContent.setLayoutParams(params);
-
                 holder.tvContent.setBackgroundResource(R.drawable.bg_blue_500_rounded);
                 holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
                 holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
-
             } else {
                 holder.layout.setGravity(android.view.Gravity.START);
                 params.setMargins(0, 0, 100, 0);
-                holder.tvContent.setLayoutParams(params);
-
                 holder.tvContent.setBackgroundResource(R.drawable.bg_neutral_100_rounded);
                 holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.black));
                 holder.iconContainer.setBackgroundResource(R.drawable.bg_purple_500_rounded);
             }
+            holder.tvContent.setLayoutParams(params);
         }
 
         @Override
@@ -301,9 +354,9 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
 
         static class ChatViewHolder extends RecyclerView.ViewHolder {
-            LinearLayout layout;
-            LinearLayout iconContainer;
-            TextView tvContent;
+            final LinearLayout layout;
+            final LinearLayout iconContainer;
+            final TextView tvContent;
 
             ChatViewHolder(View itemView, LinearLayout iconContainer, TextView tvContent) {
                 super(itemView);
