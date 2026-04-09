@@ -5,11 +5,13 @@ import android.content.Intent;
 import android.util.Log;
 
 import hcmute.edu.vn.documentfileeditor.Activity.CrashReportActivity;
+import hcmute.edu.vn.documentfileeditor.Util.ThemeManager;
 
 public class DocumentEditorApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        ThemeManager.applySavedTheme(this);
 
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Log.e("DocumentEditorCrash", "Uncaught exception on thread " + thread.getName(), throwable);

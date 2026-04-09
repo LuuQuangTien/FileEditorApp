@@ -1,9 +1,7 @@
 package hcmute.edu.vn.documentfileeditor.Fragment;
 
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,20 +21,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
-import java.util.Locale;
 
 import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.ExcelEditorActivity;
 import hcmute.edu.vn.documentfileeditor.Adapter.LiveDocumentAdapter;
 import hcmute.edu.vn.documentfileeditor.Enum.FileType;
-import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
+import hcmute.edu.vn.documentfileeditor.Service.DocumentService;
+import hcmute.edu.vn.documentfileeditor.Util.NavigationHelper;
 
 public class DocumentsFragment extends Fragment {
     private static final String TAG = "DocumentsFragment";
@@ -44,6 +42,8 @@ public class DocumentsFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView statusView;
     private DocumentRepository documentRepository;
+    private DocumentService documentService;
+    private AuthService authService;
     private ActivityResultLauncher<String[]> importDocumentLauncher;
 
     @Override
@@ -58,6 +58,8 @@ public class DocumentsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_documents, container, false);
 
         documentRepository = DocumentRepository.getInstance(requireContext());
+        documentService = new DocumentService();
+        authService = new AuthService();
         progressBar = view.findViewById(R.id.progress_documents);
         statusView = view.findViewById(R.id.tv_documents_status);
 
@@ -176,17 +178,17 @@ public class DocumentsFragment extends Fragment {
 
     private void createNewDocument(String rawName, FileType fileType) {
         try {
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if (user == null) {
+            String userId = authService.getCurrentUserId();
+            if (userId == null) {
                 showStatus("Please sign in before creating a document.");
                 return;
             }
 
-            String fileName = buildFileName(rawName, fileType);
+            String fileName = documentService.buildFileName(rawName, fileType);
             String initialContent = "";
 
             DocumentFB document = new DocumentFB();
-            document.setUserId(user.getUid());
+            document.setUserId(userId);
             document.setFileName(fileName);
             document.setFileType(fileType);
 
@@ -229,29 +231,15 @@ public class DocumentsFragment extends Fragment {
         }
     }
 
-    private String buildFileName(String rawName, FileType fileType) {
-        String trimmed = rawName == null ? "" : rawName.trim();
-        if (trimmed.isEmpty()) {
-            trimmed = fileType == FileType.EXCEL ? "New Spreadsheet" : "New Document";
-        }
-
-        String extension = fileType == FileType.EXCEL ? ".xlsx" : ".docx";
-        String lowerName = trimmed.toLowerCase(Locale.US);
-        if (!lowerName.endsWith(extension)) {
-            trimmed += extension;
-        }
-        return trimmed;
-    }
-
     private void loadDocuments() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
+        String userId = authService.getCurrentUserId();
+        if (userId == null) {
             showStatus("Please sign in to load your documents.");
             return;
         }
 
         showLoading(true);
-        documentRepository.getDocuments(user.getUid(), new DocumentCallback.GetDocumentsCallback() {
+        documentRepository.getDocuments(userId, new DocumentCallback.GetDocumentsCallback() {
             @Override
             public void onSuccess(List<DocumentFB> documents) {
                 if (!isAdded()) {
@@ -285,8 +273,8 @@ public class DocumentsFragment extends Fragment {
                 return;
             }
 
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if (user == null) {
+            String userId = authService.getCurrentUserId();
+            if (userId == null) {
                 showStatus("Please sign in before importing a document.");
                 return;
             }
@@ -299,11 +287,11 @@ public class DocumentsFragment extends Fragment {
             } catch (SecurityException ignored) {
             }
 
-            String fileName = resolveFileName(uri);
+            String fileName = documentService.resolveFileName(requireContext(), uri);
             DocumentFB document = new DocumentFB();
-            document.setUserId(user.getUid());
+            document.setUserId(userId);
             document.setFileName(fileName);
-            document.setFileType(resolveFileType(fileName, requireContext().getContentResolver().getType(uri)));
+            document.setFileType(documentService.resolveFileType(fileName, requireContext().getContentResolver().getType(uri)));
 
             showLoading(true);
             showStatus("Importing " + fileName + "...");
@@ -381,7 +369,7 @@ public class DocumentsFragment extends Fragment {
                         showLoading(false);
                         hideStatus();
                         document.setLocalPath(localPath);
-                        launchEditor(document);
+                        NavigationHelper.launchEditor(requireContext(), document);
                     }
 
                     @Override
@@ -396,28 +384,10 @@ public class DocumentsFragment extends Fragment {
                 return;
             }
 
-            launchEditor(document);
+            NavigationHelper.launchEditor(requireContext(), document);
         } catch (Exception e) {
             showLoading(false);
             reportUiError("Open document crashed.", e);
-        }
-    }
-
-    private void launchEditor(DocumentFB document) {
-        try {
-            Class<?> targetActivity = document.getFileType() == FileType.EXCEL
-                    ? ExcelEditorActivity.class
-                    : DocumentEditorActivity.class;
-
-            android.content.Intent intent = new android.content.Intent(requireContext(), targetActivity);
-            intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_ID, document.getId());
-            intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_NAME, document.getFileName());
-            intent.putExtra(DocumentEditorActivity.EXTRA_LOCAL_PATH, document.getLocalPath());
-            intent.putExtra(DocumentEditorActivity.EXTRA_CLOUD_URL, document.getCloudStorageUrl());
-            intent.putExtra(DocumentEditorActivity.EXTRA_FILE_TYPE, document.getFileType() != null ? document.getFileType().name() : null);
-            startActivity(intent);
-        } catch (Exception e) {
-            reportUiError("Failed to launch editor for " + document.getFileName(), e);
         }
     }
 
@@ -499,50 +469,5 @@ public class DocumentsFragment extends Fragment {
         if (isAdded()) {
             Toast.makeText(requireContext(), fullMessage, Toast.LENGTH_LONG).show();
         }
-    }
-
-    private String resolveFileName(Uri uri) {
-        Cursor cursor = requireContext().getContentResolver().query(
-                uri,
-                new String[]{OpenableColumns.DISPLAY_NAME},
-                null,
-                null,
-                null
-        );
-        if (cursor != null) {
-            try {
-                if (cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    if (nameIndex >= 0) {
-                        String displayName = cursor.getString(nameIndex);
-                        if (displayName != null && !displayName.isEmpty()) {
-                            return displayName;
-                        }
-                    }
-                }
-            } finally {
-                cursor.close();
-            }
-        }
-        return "Imported file " + System.currentTimeMillis();
-    }
-
-    private FileType resolveFileType(String fileName, String mimeType) {
-        String lowerName = fileName == null ? "" : fileName.toLowerCase(Locale.US);
-        String lowerMimeType = mimeType == null ? "" : mimeType.toLowerCase(Locale.US);
-
-        if (lowerName.endsWith(".pdf") || lowerMimeType.contains("pdf")) {
-            return FileType.PDF;
-        }
-        if (lowerName.endsWith(".xls") || lowerName.endsWith(".xlsx") || lowerMimeType.contains("excel") || lowerMimeType.contains("spreadsheet")) {
-            return FileType.EXCEL;
-        }
-        if (lowerName.endsWith(".doc") || lowerName.endsWith(".docx") || lowerMimeType.contains("word") || lowerName.endsWith(".txt") || lowerMimeType.contains("text")) {
-            return FileType.WORD;
-        }
-        if (lowerMimeType.startsWith("image/") || lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png")) {
-            return FileType.IMAGE;
-        }
-        return FileType.OTHER;
     }
 }

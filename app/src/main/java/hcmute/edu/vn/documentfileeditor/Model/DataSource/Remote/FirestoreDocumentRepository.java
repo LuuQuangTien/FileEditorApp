@@ -1,4 +1,4 @@
-package hcmute.edu.vn.documentfileeditor.Model.Dao;
+package hcmute.edu.vn.documentfileeditor.Model.DataSource.Remote;
 
 import android.net.Uri;
 
@@ -12,8 +12,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 
+/**
+ * Remote data source that handles all Firebase Firestore and Firebase Storage operations.
+ * Moved from Dao package to DataSource/Remote to correctly reflect its role in the architecture.
+ */
 public class FirestoreDocumentRepository {
     private static final String COLLECTION_PATH = "User_Documents";
 

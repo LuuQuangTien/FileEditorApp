@@ -9,7 +9,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -18,6 +17,7 @@ import hcmute.edu.vn.documentfileeditor.Fragment.HomeFragment;
 import hcmute.edu.vn.documentfileeditor.Fragment.ProfileFragment;
 import hcmute.edu.vn.documentfileeditor.Fragment.ToolsFragment;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+        AuthService authService = new AuthService();
+        if (!authService.isSignedIn()) {
             startActivity(new android.content.Intent(this, LoginActivity.class));
             finish();
             return;

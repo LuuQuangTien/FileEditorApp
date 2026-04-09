@@ -2,10 +2,7 @@ package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,15 +10,16 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.Slider;
 
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.ImageService;
 
 public class ImageFilterActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Bitmap originalBitmap;
+    private ImageService imageService;
 
     private Slider sliderBrightness, sliderContrast, sliderSaturation, sliderBlur;
     private TextView tvBrightness, tvContrast, tvSaturation, tvBlur;
@@ -37,6 +35,7 @@ public class ImageFilterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_filter);
 
+        imageService = new ImageService();
         imageView = findViewById(R.id.image_preview);
 
         sliderBrightness = findViewById(R.id.slider_brightness);
@@ -89,7 +88,6 @@ public class ImageFilterActivity extends AppCompatActivity {
             baseFilterMatrix.postConcat(sepia);
             applyFilters();
         });
-        // Simplistic approximations for others
         findViewById(R.id.btn_filter_vintage).setOnClickListener(v -> {
             baseFilterMatrix.setSaturation(0.5f);
             ColorMatrix vintage = new ColorMatrix();
@@ -127,43 +125,17 @@ public class ImageFilterActivity extends AppCompatActivity {
         
         sliderBlur.addOnChangeListener((slider, value, fromUser) -> {
             tvBlur.setText("Blur: " + (int)value + "px");
-            // Native blur without RenderScript/BlurMaskFilter is complex; simulating placeholder logic.
-            // A full implementation might use Toolkit or RenderScript
             applyFilters(); 
         });
     }
 
     private void applyFilters() {
         if (originalBitmap == null) return;
-
-        ColorMatrix cm = new ColorMatrix();
-        cm.postConcat(baseFilterMatrix);
-
-        // Saturation
-        ColorMatrix satMatrix = new ColorMatrix();
-        satMatrix.setSaturation(currentSaturation / 100f);
-        cm.postConcat(satMatrix);
-
-        // Brightness / Contrast
-        // Simplified matrix
-        float scale = currentContrast / 100f;
-        float trans = (currentBrightness - 100f);
-        float[] mat = new float[] {
-                scale, 0, 0, 0, trans,
-                0, scale, 0, 0, trans,
-                0, 0, scale, 0, trans,
-                0, 0, 0, 1, 0,
-        };
-        ColorMatrix bcMatrix = new ColorMatrix(mat);
-        cm.postConcat(bcMatrix);
-
-        Bitmap bmp = originalBitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Canvas canvas = new Canvas(bmp);
-        Paint paint = new Paint();
-        paint.setColorFilter(new ColorMatrixColorFilter(cm));
-        canvas.drawBitmap(originalBitmap, 0, 0, paint);
-
-        imageView.setImageBitmap(bmp);
+        Bitmap result = imageService.applyFilters(originalBitmap, baseFilterMatrix,
+                currentBrightness, currentContrast, currentSaturation);
+        if (result != null) {
+            imageView.setImageBitmap(result);
+        }
     }
 
     private void resetAll() {

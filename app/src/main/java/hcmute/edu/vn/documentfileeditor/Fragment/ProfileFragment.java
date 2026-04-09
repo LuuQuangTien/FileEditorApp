@@ -7,22 +7,29 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.firebase.auth.FirebaseUser;
 
 import hcmute.edu.vn.documentfileeditor.Activity.LoginActivity;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
+import hcmute.edu.vn.documentfileeditor.Util.ThemeManager;
 
 public class ProfileFragment extends Fragment {
+
+    private AuthService authService;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        authService = new AuthService();
 
         bindUserProfile(view);
         
@@ -30,7 +37,7 @@ public class ProfileFragment extends Fragment {
         setupSettingItem(view, R.id.setting_email, R.drawable.ic_mail, "Email Settings");
         
         setupSettingToggle(view, R.id.setting_notifications, R.drawable.ic_bell, "Notifications", true);
-        setupSettingToggle(view, R.id.setting_dark_mode, R.drawable.ic_sun, "Dark Mode", false);
+        setupDarkModeToggle(view);
         setupSettingItem(view, R.id.setting_language, R.drawable.ic_globe, "Language");
         
         setupSettingItem(view, R.id.setting_help, R.drawable.ic_help, "Help & Support");
@@ -45,7 +52,7 @@ public class ProfileFragment extends Fragment {
         TextView tvName = view.findViewById(R.id.tv_profile_name);
         TextView tvEmail = view.findViewById(R.id.tv_profile_email);
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser user = authService.getCurrentUser();
         if (user == null) {
             if (tvName != null) tvName.setText("Guest");
             if (tvEmail != null) tvEmail.setText("Not signed in");
@@ -67,7 +74,7 @@ public class ProfileFragment extends Fragment {
         View logoutButton = view.findViewById(R.id.btn_logout);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> {
-                FirebaseAuth.getInstance().signOut();
+                authService.signOut();
                 Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show();
 
                 android.content.Intent intent = new android.content.Intent(requireActivity(), LoginActivity.class);
@@ -93,10 +100,32 @@ public class ProfileFragment extends Fragment {
         if (settingView != null) {
             ImageView icon = settingView.findViewById(R.id.icon_setting);
             TextView tvLabel = settingView.findViewById(R.id.tv_setting_label);
-            com.google.android.material.materialswitch.MaterialSwitch toggle = settingView.findViewById(R.id.switch_setting);
+            MaterialSwitch toggle = settingView.findViewById(R.id.switch_setting);
             if (icon != null) icon.setImageResource(iconRes);
             if (tvLabel != null) tvLabel.setText(label);
             if (toggle != null) toggle.setChecked(isChecked);
         }
+    }
+
+    private void setupDarkModeToggle(View parentView) {
+        View settingView = parentView.findViewById(R.id.setting_dark_mode);
+        if (settingView == null) {
+            return;
+        }
+
+        ImageView icon = settingView.findViewById(R.id.icon_setting);
+        TextView tvLabel = settingView.findViewById(R.id.tv_setting_label);
+        MaterialSwitch toggle = settingView.findViewById(R.id.switch_setting);
+
+        if (icon != null) icon.setImageResource(R.drawable.ic_sun);
+        if (tvLabel != null) tvLabel.setText("Dark Mode");
+        if (toggle == null) {
+            return;
+        }
+
+        toggle.setOnCheckedChangeListener(null);
+        toggle.setChecked(ThemeManager.isDarkModeEnabled(requireContext()));
+        toggle.setOnCheckedChangeListener((buttonView, isChecked) ->
+                ThemeManager.setDarkModeEnabled(requireContext(), isChecked));
     }
 }

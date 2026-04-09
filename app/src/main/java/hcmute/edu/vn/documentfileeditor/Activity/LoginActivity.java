@@ -11,13 +11,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
 
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private FirebaseAuth auth;
+    private AuthService authService;
     private EditText etEmail;
     private EditText etPassword;
     private MaterialButton btnLogin;
@@ -26,8 +26,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
+        authService = new AuthService();
+        if (authService.isSignedIn()) {
             openMainAndClearBackStack();
             return;
         }
@@ -55,50 +55,51 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         setLoading(true);
-        auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    setLoading(false);
-                    if (task.isSuccessful()) {
-                        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-                        openMainAndClearBackStack();
-                    } else {
-                        String message = task.getException() != null
-                                ? task.getException().getMessage()
-                                : "Login failed";
-                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-                    }
-                });
+        authService.login(email, password, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                setLoading(false);
+                Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                openMainAndClearBackStack();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void sendPasswordReset() {
         String email = etEmail.getText().toString().trim();
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!authService.isValidEmail(email)) {
             etEmail.setError("Enter a valid email first");
             etEmail.requestFocus();
             return;
         }
 
-        auth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(this, "Password reset email sent", Toast.LENGTH_SHORT).show();
-                    } else {
-                        String message = task.getException() != null
-                                ? task.getException().getMessage()
-                                : "Could not send reset email";
-                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-                    }
-                });
+        authService.sendPasswordReset(email, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(LoginActivity.this, "Password reset email sent", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private boolean isValidInput(String email, String password) {
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!authService.isValidEmail(email)) {
             etEmail.setError("Enter a valid email");
             etEmail.requestFocus();
             return false;
         }
 
-        if (password.length() < 6) {
+        if (!authService.isValidPassword(password)) {
             etPassword.setError("Password must be at least 6 characters");
             etPassword.requestFocus();
             return false;

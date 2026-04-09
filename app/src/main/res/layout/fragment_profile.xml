@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/neutral_50"
+    android:background="@color/app_background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -21,7 +21,7 @@
             android:text="Profile"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="@color/app_text_primary"
             android:layout_marginBottom="4dp" />
 
         <TextView
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:text="Manage your account and settings"
             android:textSize="14sp"
-            android:textColor="@color/neutral_600"
+            android:textColor="@color/app_text_secondary"
             android:layout_marginBottom="24dp" />
 
         <!-- User Card -->
@@ -94,7 +94,7 @@
             android:text="Account"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/neutral_600"
+            android:textColor="@color/app_text_secondary"
             android:layout_marginBottom="8dp"
             android:layout_marginStart="4dp"/>
 
@@ -110,7 +110,7 @@
             android:text="App Settings"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/neutral_600"
+            android:textColor="@color/app_text_secondary"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             android:layout_marginStart="4dp"/>
@@ -129,7 +129,7 @@
             android:text="Other"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/neutral_600"
+            android:textColor="@color/app_text_secondary"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             android:layout_marginStart="4dp"/>
@@ -147,10 +147,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="@color/white"
+            app:cardBackgroundColor="@color/app_surface"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:strokeColor="@color/neutral_200"
+            app:strokeColor="@color/app_stroke"
             app:strokeWidth="1dp">
             
             <LinearLayout
@@ -171,7 +171,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Storage"
-                        android:textColor="@color/black"
+                        android:textColor="@color/app_text_primary"
                         android:textStyle="bold"
                         android:textSize="14sp" />
                         
@@ -179,7 +179,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="2.4 GB / 10 GB"
-                        android:textColor="@color/neutral_600"
+                        android:textColor="@color/app_text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -218,7 +218,7 @@
             android:text="Version 1.0.0"
             android:textAlignment="center"
             android:textSize="12sp"
-            android:textColor="@color/neutral_600" />
+            android:textColor="@color/app_text_secondary" />
             
     </LinearLayout>
 </ScrollView>

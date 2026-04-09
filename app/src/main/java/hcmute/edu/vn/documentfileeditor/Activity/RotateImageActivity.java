@@ -2,7 +2,6 @@ package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,11 +12,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.slider.Slider;
 
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.ImageService;
 
 public class RotateImageActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Bitmap originalBitmap;
+    private ImageService imageService;
 
     private float currentRotation = 0f;
     private boolean isFlippedH = false;
@@ -30,6 +31,8 @@ public class RotateImageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rotate_image);
+
+        imageService = new ImageService();
 
         imageView = findViewById(R.id.image_preview);
         sliderRotation = findViewById(R.id.slider_rotation);
@@ -62,7 +65,7 @@ public class RotateImageActivity extends AppCompatActivity {
         findViewById(R.id.btn_rotate_ccw).setOnClickListener(v -> {
             currentRotation -= 90f;
             if (currentRotation < 0) currentRotation += 360f;
-            sliderRotation.setValue(currentRotation); // this will trigger applyTransformations
+            sliderRotation.setValue(currentRotation);
         });
 
         findViewById(R.id.btn_rotate_cw).setOnClickListener(v -> {
@@ -92,24 +95,10 @@ public class RotateImageActivity extends AppCompatActivity {
 
     private void applyTransformations() {
         if (originalBitmap == null) return;
-
-        Matrix matrix = new Matrix();
-
-        // Scaling for flip MUST happen with pivot at center to avoid translating out of bounds
-        float scaleX = isFlippedH ? -1f : 1f;
-        float scaleY = isFlippedV ? -1f : 1f;
-        matrix.postScale(scaleX, scaleY, originalBitmap.getWidth() / 2f, originalBitmap.getHeight() / 2f);
-
-        // Rotation
-        matrix.postRotate(currentRotation, originalBitmap.getWidth() / 2f, originalBitmap.getHeight() / 2f);
-
-        Bitmap transformedBitmap = Bitmap.createBitmap(
-                originalBitmap, 0, 0,
-                originalBitmap.getWidth(), originalBitmap.getHeight(),
-                matrix, true
-        );
-
-        imageView.setImageBitmap(transformedBitmap);
+        Bitmap result = imageService.applyTransformations(originalBitmap, currentRotation, isFlippedH, isFlippedV);
+        if (result != null) {
+            imageView.setImageBitmap(result);
+        }
     }
 
     private void resetAll() {

@@ -18,16 +18,20 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentDao;
-import hcmute.edu.vn.documentfileeditor.Model.Dao.FirestoreDocumentRepository;
+import hcmute.edu.vn.documentfileeditor.Model.DataSource.Remote.FirestoreDocumentRepository;
 import hcmute.edu.vn.documentfileeditor.Model.Database.DocumentDatabase;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentEntity;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Model.Mapper.DocumentMapper;
 import hcmute.edu.vn.documentfileeditor.Model.Storage.LocalDocumentStorage;
 
-public class DocumentRepository {
+/**
+ * Concrete implementation of IDocumentRepository.
+ * Orchestrates data flow between local (Room + file storage) and remote (Firestore + Firebase Storage).
+ */
+public class DocumentRepository implements IDocumentRepository {
     private static final String TAG = "DocumentRepository";
     private static volatile DocumentRepository instance;
 
@@ -61,6 +65,7 @@ public class DocumentRepository {
         return instance;
     }
 
+    @Override
     public void uploadDocument(Context context, Uri sourceUri, DocumentFB documentMeta, DocumentCallback.UploadCallback callback) {
         ioExecutor.execute(() -> {
             String localPath = localDocumentStorage.saveFile(context, sourceUri, documentMeta.getFileName());
@@ -77,6 +82,7 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void createDocument(Context context, DocumentFB documentMeta, String initialContent, DocumentCallback.UploadCallback callback) {
         ioExecutor.execute(() -> {
             String localPath = localDocumentStorage.createFile(context, documentMeta.getFileName(), initialContent);
@@ -93,6 +99,7 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void saveDocument(DocumentFB documentMeta, DocumentCallback.UploadCallback callback) {
         if (documentMeta == null || documentMeta.getLocalPath() == null || documentMeta.getLocalPath().isEmpty()) {
             callback.onFailure(new Exception("Document khong co localPath"));
@@ -118,6 +125,7 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void getDocuments(String userId, DocumentCallback.GetDocumentsCallback callback) {
         List<DocumentFB> cachedDocuments = getCachedDocuments(userId);
         if (!cachedDocuments.isEmpty()) {
@@ -155,6 +163,7 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void downloadIfNeeded(Context context, DocumentFB document, DocumentCallback.DownloadCallback callback) {
         if (document.getLocalPath() != null && new File(document.getLocalPath()).exists()) {
             callback.onSuccess(document.getLocalPath());
@@ -181,6 +190,7 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void deleteDocument(DocumentFB document, DocumentCallback.SimpleCallback callback) {
         remoteRepository.deleteDocument(document, new DocumentCallback.SimpleCallback() {
             @Override
@@ -200,10 +210,12 @@ public class DocumentRepository {
         });
     }
 
+    @Override
     public void retrySync(DocumentFB document) {
         syncDocumentInBackground(document);
     }
 
+    @Override
     public List<DocumentFB> getCachedDocuments(String userId) {
         List<DocumentFB> cachedDocuments = new ArrayList<>();
         synchronized (cachedDocumentsById) {
@@ -284,10 +296,6 @@ public class DocumentRepository {
                 syncDocumentInBackground(document);
             }
         }
-    }
-
-    private void upsertLocalAsync(DocumentFB document) {
-        ioExecutor.execute(() -> documentDao.upsert(DocumentMapper.toEntity(document)));
     }
 
     private void cacheDocuments(List<DocumentFB> documents) {

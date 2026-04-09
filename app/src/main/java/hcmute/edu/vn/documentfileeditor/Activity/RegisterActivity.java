@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -17,14 +16,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserProfileChangeRequest;
 
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private FirebaseAuth auth;
+    private AuthService authService;
     private EditText etName;
     private EditText etEmail;
     private EditText etPassword;
@@ -41,7 +39,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        auth = FirebaseAuth.getInstance();
+        authService = new AuthService();
 
         etName = findViewById(R.id.et_name);
         etEmail = findViewById(R.id.et_email);
@@ -123,34 +121,20 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         setLoading(true);
-        auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        setLoading(false);
-                        String message = task.getException() != null
-                                ? task.getException().getMessage()
-                                : "Registration failed";
-                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-                        return;
-                    }
+        authService.register(name, email, password, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                setLoading(false);
+                Toast.makeText(RegisterActivity.this, "Account created successfully", Toast.LENGTH_SHORT).show();
+                openMainAndClearBackStack();
+            }
 
-                    if (auth.getCurrentUser() != null) {
-                        UserProfileChangeRequest profileUpdates =
-                                new UserProfileChangeRequest.Builder()
-                                        .setDisplayName(name)
-                                        .build();
-
-                        auth.getCurrentUser().updateProfile(profileUpdates)
-                                .addOnCompleteListener(updateTask -> {
-                                    setLoading(false);
-                                    Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show();
-                                    openMainAndClearBackStack();
-                                });
-                    } else {
-                        setLoading(false);
-                        openMainAndClearBackStack();
-                    }
-                });
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private boolean isValidInput(String name, String email, String password, String confirmPassword) {
@@ -160,13 +144,13 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!authService.isValidEmail(email)) {
             etEmail.setError("Enter a valid email");
             etEmail.requestFocus();
             return false;
         }
 
-        if (password.length() < 6) {
+        if (!authService.isValidPassword(password)) {
             etPassword.setError("Password must be at least 6 characters");
             etPassword.requestFocus();
             return false;

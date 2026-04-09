@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="@color/white"
+    app:cardBackgroundColor="@color/app_surface"
     app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
-    app:strokeColor="@color/neutral_200"
+    app:strokeColor="@color/app_stroke"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -27,7 +27,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_user"
-                app:tint="@color/neutral_600" />
+                app:tint="@color/app_text_secondary" />
         </FrameLayout>
         
         <TextView
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Setting Name"
-            android:textColor="@color/black"
+            android:textColor="@color/app_text_primary"
             android:textStyle="bold"
             android:textSize="14sp"
             android:layout_marginStart="12dp" />
@@ -45,6 +45,6 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_chevron_right"
-            app:tint="@color/neutral_400" />
+            app:tint="@color/app_text_muted" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

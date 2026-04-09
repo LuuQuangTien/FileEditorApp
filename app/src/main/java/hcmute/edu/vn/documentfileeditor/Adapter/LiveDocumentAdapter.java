@@ -11,16 +11,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-import hcmute.edu.vn.documentfileeditor.Enum.FileType;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.DocumentService;
+import hcmute.edu.vn.documentfileeditor.Util.FileTypeHelper;
 
+/**
+ * RecyclerView Adapter for displaying live documents from the repository.
+ * Uses FileTypeHelper and DocumentService to eliminate duplicate logic.
+ */
 public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapter.DocumentViewHolder> {
     public interface OnDocumentClickListener {
         void onDocumentClick(DocumentFB document);
@@ -33,11 +35,13 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
     private final List<DocumentFB> documents = new ArrayList<>();
     private final OnDocumentClickListener onDocumentClickListener;
     private final OnDocumentMoreClickListener onDocumentMoreClickListener;
+    private final DocumentService documentService;
 
     public LiveDocumentAdapter(OnDocumentClickListener onDocumentClickListener,
                                OnDocumentMoreClickListener onDocumentMoreClickListener) {
         this.onDocumentClickListener = onDocumentClickListener;
         this.onDocumentMoreClickListener = onDocumentMoreClickListener;
+        this.documentService = new DocumentService();
     }
 
     public void submitList(List<DocumentFB> newDocuments) {
@@ -68,7 +72,7 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
 
     @Override
     public void onBindViewHolder(@NonNull DocumentViewHolder holder, int position) {
-        holder.bind(documents.get(position), onDocumentClickListener, onDocumentMoreClickListener);
+        holder.bind(documents.get(position), onDocumentClickListener, onDocumentMoreClickListener, documentService);
     }
 
     @Override
@@ -94,61 +98,20 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
 
         void bind(DocumentFB document,
                   OnDocumentClickListener onDocumentClickListener,
-                  OnDocumentMoreClickListener onDocumentMoreClickListener) {
+                  OnDocumentMoreClickListener onDocumentMoreClickListener,
+                  DocumentService documentService) {
             fileName.setText(document.getFileName());
-            fileMeta.setText(buildMeta(document));
-            bindFileType(document.getFileType());
+
+            // Use DocumentService for meta (includes size info)
+            String sizeText = documentService.formatFileSize(document.getSizeBytes());
+            String metaText = documentService.buildMeta(document);
+            fileMeta.setText(sizeText + " | " + metaText);
+
+            // Use FileTypeHelper for consistent icon binding
+            FileTypeHelper.bindFileType(itemView.getContext(), iconContainer, fileIcon, document.getFileType());
+
             itemView.setOnClickListener(v -> onDocumentClickListener.onDocumentClick(document));
             moreButton.setOnClickListener(v -> onDocumentMoreClickListener.onDocumentMoreClick(v, document));
-        }
-
-        private String buildMeta(DocumentFB document) {
-            String sizeText = formatFileSize(document.getSizeBytes());
-            String dateText = document.getLastModified() > 0
-                    ? DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(document.getLastModified()))
-                    : "Unknown date";
-            String syncText = (document.getCloudStorageUrl() == null || document.getCloudStorageUrl().isEmpty())
-                    ? "Pending sync"
-                    : "Synced";
-            return sizeText + " | " + dateText + " | " + syncText;
-        }
-
-        private String formatFileSize(long sizeBytes) {
-            if (sizeBytes <= 0) {
-                return "Unknown size";
-            }
-            if (sizeBytes < 1024) {
-                return sizeBytes + " B";
-            }
-            double sizeKb = sizeBytes / 1024.0;
-            if (sizeKb < 1024) {
-                return String.format(Locale.US, "%.1f KB", sizeKb);
-            }
-            double sizeMb = sizeKb / 1024.0;
-            if (sizeMb < 1024) {
-                return String.format(Locale.US, "%.1f MB", sizeMb);
-            }
-            return String.format(Locale.US, "%.1f GB", sizeMb / 1024.0);
-        }
-
-        private void bindFileType(FileType fileType) {
-            if (fileType == FileType.EXCEL) {
-                iconContainer.setCardBackgroundColor(itemView.getContext().getColor(R.color.green_100));
-                fileIcon.setImageResource(R.drawable.ic_sheet);
-                fileIcon.setColorFilter(itemView.getContext().getColor(R.color.green_600));
-                return;
-            }
-
-            if (fileType == FileType.PDF) {
-                iconContainer.setCardBackgroundColor(itemView.getContext().getColor(R.color.red_100));
-                fileIcon.setImageResource(R.drawable.ic_file);
-                fileIcon.setColorFilter(itemView.getContext().getColor(R.color.red_600));
-                return;
-            }
-
-            iconContainer.setCardBackgroundColor(itemView.getContext().getColor(R.color.blue_100));
-            fileIcon.setImageResource(R.drawable.ic_file_text);
-            fileIcon.setColorFilter(itemView.getContext().getColor(R.color.blue_600));
         }
     }
 }

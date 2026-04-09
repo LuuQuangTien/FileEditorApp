@@ -8,12 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,8 +18,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.documentfileeditor.Adapter.ChatAdapter;
+import hcmute.edu.vn.documentfileeditor.Model.Entity.ChatMessage;
 import hcmute.edu.vn.documentfileeditor.R;
 
+/**
+ * Fragment for the AI chat assistant.
+ * Now uses extracted ChatMessage model and ChatAdapter instead of inner classes.
+ */
 public class ChatFragment extends Fragment {
 
     private RecyclerView rvMessages;
@@ -50,6 +53,7 @@ public class ChatFragment extends Fragment {
         messageList.add(new ChatMessage("assistant", "Hello! I'm your AI assistant for document management. I can help you with:\n\n• Searching through your documents\n• Summarizing PDFs and long documents\n• Answering questions about your files\n• Organizing and categorizing documents\n• Extracting specific information\n\nHow can I help you today?"));
 
         adapter = new ChatAdapter(messageList);
+        rvMessages.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvMessages.setAdapter(adapter);
 
         btnSend.setOnClickListener(v -> sendMessage());
@@ -82,102 +86,5 @@ public class ChatFragment extends Fragment {
             rvMessages.scrollToPosition(messageList.size() - 1);
             
         }, 1500);
-    }
-
-    // Chat Message Model
-    private static class ChatMessage {
-        String role;
-        String content;
-
-        ChatMessage(String role, String content) {
-            this.role = role;
-            this.content = content;
-        }
-    }
-
-    // Modern RecyclerView Adapter for Chat
-    private static class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
-
-        private final List<ChatMessage> messages;
-
-        ChatAdapter(List<ChatMessage> messages) {
-            this.messages = messages;
-        }
-
-        @NonNull
-        @Override
-        public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            LinearLayout layout = new LinearLayout(parent.getContext());
-            layout.setLayoutParams(new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT));
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-            layout.setPadding(0, 16, 0, 16);
-
-            LinearLayout iconContainer = new LinearLayout(parent.getContext());
-            int iconSize = (int) (40 * parent.getContext().getResources().getDisplayMetrics().density);
-            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
-            iconContainer.setLayoutParams(iconParams);
-            iconContainer.setId(View.generateViewId());
-            iconContainer.setGravity(android.view.Gravity.CENTER);
-
-            TextView tvContent = new TextView(parent.getContext());
-            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-            textParams.setMargins(24, 0, 24, 0); // 8dp approx
-            tvContent.setLayoutParams(textParams);
-            tvContent.setId(View.generateViewId());
-            tvContent.setPadding(32, 32, 32, 32);
-            tvContent.setTextSize(14);
-
-            layout.addView(iconContainer);
-            layout.addView(tvContent);
-
-            return new ChatViewHolder(layout, iconContainer, tvContent);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-            ChatMessage msg = messages.get(position);
-            holder.tvContent.setText(msg.content);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.tvContent.getLayoutParams();
-
-            if ("user".equals(msg.role)) {
-                holder.layout.setGravity(android.view.Gravity.END);
-                params.setMargins(100, 0, 0, 0);
-                holder.tvContent.setLayoutParams(params);
-
-                holder.tvContent.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue_600));
-                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
-                holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.neutral_200));
-
-            } else {
-                holder.layout.setGravity(android.view.Gravity.START);
-                params.setMargins(0, 0, 100, 0);
-                holder.tvContent.setLayoutParams(params);
-
-                holder.tvContent.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
-                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.neutral_700));
-                holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue_100));
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return messages.size();
-        }
-
-        static class ChatViewHolder extends RecyclerView.ViewHolder {
-            LinearLayout layout;
-            LinearLayout iconContainer;
-            TextView tvContent;
-
-            ChatViewHolder(View itemView, LinearLayout iconContainer, TextView tvContent) {
-                super(itemView);
-                this.layout = (LinearLayout) itemView;
-                this.iconContainer = iconContainer;
-                this.tvContent = tvContent;
-            }
-        }
     }
 }

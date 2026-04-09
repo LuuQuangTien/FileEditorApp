@@ -2,14 +2,10 @@ package hcmute.edu.vn.documentfileeditor.Activity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.LightingColorFilter;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -19,11 +15,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.ImageService;
 
 public class EnhanceImageActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Bitmap originalBitmap;
+    private ImageService imageService;
     
     private LinearLayout processingOverlay, badgeEnhanced, optionsContainer, resultsContainer;
     private MaterialButton btnReset, btnDownload, btnDownloadLarge, btnTryDifferent;
@@ -32,6 +30,8 @@ public class EnhanceImageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enhance_image);
+
+        imageService = new ImageService();
 
         imageView = findViewById(R.id.image_preview);
         processingOverlay = findViewById(R.id.processing_overlay);
@@ -67,9 +67,7 @@ public class EnhanceImageActivity extends AppCompatActivity {
     private void loadImage() {
         try {
             originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sample);
-            if (originalBitmap == null) {
-                // If sample drawable doesn't exist, try decoding from assets or leave blank
-            } else {
+            if (originalBitmap != null) {
                 imageView.setImageBitmap(originalBitmap);
             }
         } catch (Exception e) {
@@ -86,7 +84,10 @@ public class EnhanceImageActivity extends AppCompatActivity {
         
         // Simulate delay
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            applyEnhancementFilter();
+            Bitmap enhanced = imageService.applyEnhancement(originalBitmap);
+            if (enhanced != null) {
+                imageView.setImageBitmap(enhanced);
+            }
             
             processingOverlay.setVisibility(View.GONE);
             badgeEnhanced.setVisibility(View.VISIBLE);
@@ -94,17 +95,7 @@ public class EnhanceImageActivity extends AppCompatActivity {
             
             btnReset.setVisibility(View.VISIBLE);
             btnDownload.setEnabled(true);
-        }, 1500); // 1.5 seconds delay
-    }
-
-    private void applyEnhancementFilter() {
-        Bitmap bmp = originalBitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Canvas canvas = new Canvas(bmp);
-        Paint paint = new Paint();
-        // Simulate a brightness/contrast enhancement
-        paint.setColorFilter(new LightingColorFilter(0xFFDDDDDD, 0x00222222));
-        canvas.drawBitmap(bmp, 0, 0, paint);
-        imageView.setImageBitmap(bmp);
+        }, 1500);
     }
 
     private void reset() {

@@ -1,6 +1,5 @@
 package hcmute.edu.vn.documentfileeditor.Fragment;
 
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,29 +14,29 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import hcmute.edu.vn.documentfileeditor.Activity.DocumentEditorActivity;
-import hcmute.edu.vn.documentfileeditor.Activity.ExcelEditorActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.OcrActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.ScanActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.TranslateActivity;
-import hcmute.edu.vn.documentfileeditor.Enum.FileType;
-import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
+import hcmute.edu.vn.documentfileeditor.Service.DocumentService;
+import hcmute.edu.vn.documentfileeditor.Util.FileTypeHelper;
+import hcmute.edu.vn.documentfileeditor.Util.NavigationHelper;
+import hcmute.edu.vn.documentfileeditor.Util.ThemeManager;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
 
     private DocumentRepository documentRepository;
+    private DocumentService documentService;
+    private AuthService authService;
     private View rootView;
     private RecentCardBinding[] recentBindings;
     private boolean hasShownLiveDocuments;
@@ -48,7 +47,10 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable android.os.Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_home, container, false);
         documentRepository = DocumentRepository.getInstance(requireContext());
+        documentService = new DocumentService();
+        authService = new AuthService();
 
+        setupThemeButton(rootView);
         setupQuickActions(rootView);
         setupRecentFiles(rootView);
         loadRecentFiles();
@@ -70,16 +72,41 @@ public class HomeFragment extends Fragment {
         View actionTranslate = view.findViewById(R.id.card_action_translate);
 
         if (actionScan != null) {
-            actionScan.setOnClickListener(v -> startActivity(new Intent(getActivity(), ScanActivity.class)));
+            actionScan.setOnClickListener(v -> startActivity(new android.content.Intent(getActivity(), ScanActivity.class)));
         }
 
         if (actionOcr != null) {
-            actionOcr.setOnClickListener(v -> startActivity(new Intent(getActivity(), OcrActivity.class)));
+            actionOcr.setOnClickListener(v -> startActivity(new android.content.Intent(getActivity(), OcrActivity.class)));
         }
 
         if (actionTranslate != null) {
-            actionTranslate.setOnClickListener(v -> startActivity(new Intent(getActivity(), TranslateActivity.class)));
+            actionTranslate.setOnClickListener(v -> startActivity(new android.content.Intent(getActivity(), TranslateActivity.class)));
         }
+    }
+
+    private void setupThemeButton(View view) {
+        View themeButton = view.findViewById(R.id.btn_theme);
+        ImageView themeIcon = view.findViewById(R.id.iv_theme_icon);
+        updateThemeButtonIcon(themeIcon);
+
+        if (themeButton != null) {
+            themeButton.setOnClickListener(v -> {
+                ThemeManager.toggleDarkMode(requireContext());
+                updateThemeButtonIcon(themeIcon);
+            });
+        }
+    }
+
+    private void updateThemeButtonIcon(@Nullable ImageView themeIcon) {
+        if (themeIcon == null || !isAdded()) {
+            return;
+        }
+
+        themeIcon.setImageResource(
+                ThemeManager.isDarkModeEnabled(requireContext())
+                        ? R.drawable.ic_moon
+                        : R.drawable.ic_sun
+        );
     }
 
     private void setupRecentFiles(View view) {
@@ -117,14 +144,14 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadRecentFiles() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
+        String userId = authService.getCurrentUserId();
+        if (userId == null) {
             setRecentCardsVisible(false);
             showRecentStatus(true);
             return;
         }
 
-        List<DocumentFB> cachedDocuments = documentRepository.getCachedDocuments(user.getUid());
+        List<DocumentFB> cachedDocuments = documentRepository.getCachedDocuments(userId);
         if (!cachedDocuments.isEmpty()) {
             bindRecentDocuments(cachedDocuments);
             hasShownLiveDocuments = true;
@@ -133,7 +160,7 @@ public class HomeFragment extends Fragment {
             showRecentStatus(true);
         }
 
-        documentRepository.getDocuments(user.getUid(), new DocumentCallback.GetDocumentsCallback() {
+        documentRepository.getDocuments(userId, new DocumentCallback.GetDocumentsCallback() {
             @Override
             public void onSuccess(List<DocumentFB> documents) {
                 if (!isAdded()) {
@@ -189,8 +216,8 @@ public class HomeFragment extends Fragment {
 
     private void bindDocumentCard(RecentCardBinding binding, DocumentFB document) {
         binding.nameView.setText(document.getFileName());
-        binding.metaView.setText(buildMeta(document));
-        bindFileType(binding, document.getFileType());
+        binding.metaView.setText(documentService.buildMeta(document));
+        FileTypeHelper.bindFileType(requireContext(), binding.iconContainer, binding.iconView, document.getFileType());
         binding.cardView.setOnClickListener(v -> openDocument(document));
     }
 
@@ -207,53 +234,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private String buildMeta(DocumentFB document) {
-        String typeText = buildTypeLabel(document.getFileType());
-        String dateText = document.getLastModified() > 0L
-                ? DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(document.getLastModified()))
-                : "Unknown date";
-        String syncText = (document.getCloudStorageUrl() == null || document.getCloudStorageUrl().isEmpty())
-                ? "Pending sync"
-                : "Synced";
-        return typeText + " | " + dateText + " | " + syncText;
-    }
-
-    private String buildTypeLabel(FileType fileType) {
-        if (fileType == FileType.EXCEL) {
-            return "Excel";
-        }
-        if (fileType == FileType.PDF) {
-            return "PDF";
-        }
-        if (fileType == FileType.IMAGE) {
-            return "Image";
-        }
-        if (fileType == FileType.OTHER) {
-            return "File";
-        }
-        return "Word";
-    }
-
-    private void bindFileType(RecentCardBinding binding, FileType fileType) {
-        if (fileType == FileType.EXCEL) {
-            binding.iconContainer.setCardBackgroundColor(requireContext().getColor(R.color.green_100));
-            binding.iconView.setImageResource(R.drawable.ic_sheet);
-            binding.iconView.setColorFilter(requireContext().getColor(R.color.green_600));
-            return;
-        }
-
-        if (fileType == FileType.PDF) {
-            binding.iconContainer.setCardBackgroundColor(requireContext().getColor(R.color.red_100));
-            binding.iconView.setImageResource(R.drawable.ic_file);
-            binding.iconView.setColorFilter(requireContext().getColor(R.color.red_600));
-            return;
-        }
-
-        binding.iconContainer.setCardBackgroundColor(requireContext().getColor(R.color.blue_100));
-        binding.iconView.setImageResource(R.drawable.ic_file_text);
-        binding.iconView.setColorFilter(requireContext().getColor(R.color.blue_600));
-    }
-
     private void openDocument(DocumentFB document) {
         if ((document.getLocalPath() == null || document.getLocalPath().isEmpty())
                 && document.getCloudStorageUrl() != null
@@ -265,7 +245,7 @@ public class HomeFragment extends Fragment {
                         return;
                     }
                     document.setLocalPath(localPath);
-                    launchEditor(document);
+                    NavigationHelper.launchEditor(requireContext(), document);
                 }
 
                 @Override
@@ -280,24 +260,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        launchEditor(document);
-    }
-
-    private void launchEditor(DocumentFB document) {
-        Class<?> targetActivity = document.getFileType() == FileType.EXCEL
-                ? ExcelEditorActivity.class
-                : DocumentEditorActivity.class;
-
-        Intent intent = new Intent(requireContext(), targetActivity);
-        intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_ID, document.getId());
-        intent.putExtra(DocumentEditorActivity.EXTRA_DOCUMENT_NAME, document.getFileName());
-        intent.putExtra(DocumentEditorActivity.EXTRA_LOCAL_PATH, document.getLocalPath());
-        intent.putExtra(DocumentEditorActivity.EXTRA_CLOUD_URL, document.getCloudStorageUrl());
-        intent.putExtra(
-                DocumentEditorActivity.EXTRA_FILE_TYPE,
-                document.getFileType() != null ? document.getFileType().name() : FileType.WORD.name()
-        );
-        startActivity(intent);
+        NavigationHelper.launchEditor(requireContext(), document);
     }
 
     private void openDocumentsTab() {

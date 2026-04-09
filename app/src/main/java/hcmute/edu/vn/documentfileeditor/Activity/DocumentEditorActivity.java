@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,19 +22,18 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.documentfileeditor.Adapter.ChatAdapter;
 import hcmute.edu.vn.documentfileeditor.Enum.FileType;
-import hcmute.edu.vn.documentfileeditor.Model.Dao.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
+import hcmute.edu.vn.documentfileeditor.Model.Entity.ChatMessage;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Model.Repository.DocumentRepository;
 import hcmute.edu.vn.documentfileeditor.R;
+import hcmute.edu.vn.documentfileeditor.Service.AuthService;
+import hcmute.edu.vn.documentfileeditor.Service.DocumentService;
 
 public class DocumentEditorActivity extends AppCompatActivity {
     public static final String EXTRA_DOCUMENT_ID = "extra_document_id";
@@ -45,6 +43,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
     public static final String EXTRA_FILE_TYPE = "extra_file_type";
 
     private DocumentRepository documentRepository;
+    private DocumentService documentService;
+    private AuthService authService;
     private DocumentFB currentDocument;
     private EditText editor;
 
@@ -54,6 +54,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_document_editor);
 
         documentRepository = DocumentRepository.getInstance(this);
+        documentService = new DocumentService();
+        authService = new AuthService();
         editor = findViewById(R.id.et_editor);
         bindDocumentInfo();
 
@@ -97,9 +99,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
         currentDocument = new DocumentFB();
         currentDocument.setId(getIntent().getStringExtra(EXTRA_DOCUMENT_ID));
-        currentDocument.setUserId(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null
-                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid()
-                : null);
+        currentDocument.setUserId(authService.getCurrentUserId());
         currentDocument.setFileName(getIntent().getStringExtra(EXTRA_DOCUMENT_NAME));
         currentDocument.setLocalPath(getIntent().getStringExtra(EXTRA_LOCAL_PATH));
         currentDocument.setCloudStorageUrl(getIntent().getStringExtra(EXTRA_CLOUD_URL));
@@ -115,33 +115,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
             tvTitle.setText(currentDocument.getFileName());
         }
 
-        String content = readTextFromLocalFile(currentDocument.getLocalPath());
+        String content = documentService.readTextFromLocalFile(this, currentDocument.getLocalPath());
         editor.setText(content == null || content.isEmpty() ? "Start writing here..." : content);
-    }
-
-    private String readTextFromLocalFile(String localPath) {
-        if (localPath == null || localPath.isEmpty()) {
-            return null;
-        }
-        try {
-            File file = new File(localPath);
-            if (!file.exists()) {
-                return null;
-            }
-            InputStream input = getContentResolver().openInputStream(android.net.Uri.fromFile(file));
-            if (input == null) {
-                return null;
-            }
-            byte[] bytes = new byte[(int) file.length()];
-            int read = input.read(bytes);
-            input.close();
-            if (read <= 0) {
-                return null;
-            }
-            return new String(bytes, 0, read, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            return null;
-        }
     }
 
     private void saveDocument() {
@@ -150,11 +125,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
             return;
         }
 
-        try {
-            FileOutputStream output = new FileOutputStream(new File(currentDocument.getLocalPath()), false);
-            output.write(editor.getText().toString().getBytes(StandardCharsets.UTF_8));
-            output.close();
-        } catch (Exception e) {
+        if (!documentService.saveTextToLocalFile(currentDocument.getLocalPath(), editor.getText().toString())) {
             Toast.makeText(this, "Could not save local file.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -282,88 +253,5 @@ public class DocumentEditorActivity extends AppCompatActivity {
         });
 
         dialog.show();
-    }
-
-    private static class ChatMessage {
-        String role;
-        String content;
-
-        ChatMessage(String role, String content) {
-            this.role = role;
-            this.content = content;
-        }
-    }
-
-    private static class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
-        private final List<ChatMessage> messages;
-
-        ChatAdapter(List<ChatMessage> messages) {
-            this.messages = messages;
-        }
-
-        @NonNull
-        @Override
-        public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            LinearLayout layout = new LinearLayout(parent.getContext());
-            layout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-            layout.setPadding(0, 16, 0, 16);
-
-            LinearLayout iconContainer = new LinearLayout(parent.getContext());
-            int iconSize = (int) (40 * parent.getContext().getResources().getDisplayMetrics().density);
-            iconContainer.setLayoutParams(new LinearLayout.LayoutParams(iconSize, iconSize));
-            iconContainer.setGravity(android.view.Gravity.CENTER);
-
-            TextView tvContent = new TextView(parent.getContext());
-            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-            textParams.setMargins(24, 0, 24, 0);
-            tvContent.setLayoutParams(textParams);
-            tvContent.setPadding(32, 32, 32, 32);
-            tvContent.setTextSize(14f);
-
-            layout.addView(iconContainer);
-            layout.addView(tvContent);
-            return new ChatViewHolder(layout, iconContainer, tvContent);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-            ChatMessage msg = messages.get(position);
-            holder.tvContent.setText(msg.content);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.tvContent.getLayoutParams();
-
-            if ("user".equals(msg.role)) {
-                holder.layout.setGravity(android.view.Gravity.END);
-                params.setMargins(100, 0, 0, 0);
-                holder.tvContent.setBackgroundResource(R.drawable.bg_blue_500_rounded);
-                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
-                holder.iconContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
-            } else {
-                holder.layout.setGravity(android.view.Gravity.START);
-                params.setMargins(0, 0, 100, 0);
-                holder.tvContent.setBackgroundResource(R.drawable.bg_neutral_100_rounded);
-                holder.tvContent.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.black));
-                holder.iconContainer.setBackgroundResource(R.drawable.bg_purple_500_rounded);
-            }
-            holder.tvContent.setLayoutParams(params);
-        }
-
-        @Override
-        public int getItemCount() {
-            return messages.size();
-        }
-
-        static class ChatViewHolder extends RecyclerView.ViewHolder {
-            final LinearLayout layout;
-            final LinearLayout iconContainer;
-            final TextView tvContent;
-
-            ChatViewHolder(View itemView, LinearLayout iconContainer, TextView tvContent) {
-                super(itemView);
-                this.layout = (LinearLayout) itemView;
-                this.iconContainer = iconContainer;
-                this.tvContent = tvContent;
-            }
-        }
     }
 }
