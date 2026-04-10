@@ -39,13 +39,27 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.room:room-runtime:2.7.2")
+    implementation("androidx.room:room-ktx:2.7.2")
     annotationProcessor("androidx.room:room-compiler:2.7.2")
-    implementation("com.google.android.material:material:1.11.0")
+
+    //Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
+
+    //             Google ML API
+    //OCR + Dịch
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("com.google.mlkit:translate:17.0.3")
+
+    //Crop + Cải thiện hình ảnh
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
+    implementation("org.opencv:opencv:4.13.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
