@@ -126,6 +126,7 @@
                         android:layout_marginBottom="16dp" />
                         
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_select_file"
                         android:layout_width="wrap_content"
                         android:layout_height="44dp"
                         android:text="Select File"
@@ -170,6 +171,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
                         <TextView
+                            android:id="@+id/tv_file_name_ocr"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="document-scan.jpg"
@@ -178,6 +180,7 @@
                             android:ellipsize="end"
                             android:maxLines="1" />
                         <TextView
+                            android:id="@+id/tv_file_size_ocr"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1,024.00 KB"
@@ -213,6 +216,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_copy"
                             style="?attr/materialButtonOutlinedStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -222,6 +226,7 @@
                             app:cornerRadius="8dp"
                             android:layout_marginEnd="8dp" />
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_translate_ocr"
                             style="?attr/materialButtonOutlinedStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -230,6 +235,7 @@
                             app:cornerRadius="8dp"
                             android:layout_marginEnd="8dp" />
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_download_ocr"
                             style="?attr/materialButtonOutlinedStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -249,13 +255,14 @@
                     app:strokeWidth="1dp">
                     
                     <EditText
+                        android:id="@+id/et_extracted_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="400dp"
                         android:gravity="top|start"
                         android:background="@null"
                         android:padding="16dp"
-                        android:text="[Extracted with Google Gemini Vision API]\n\nThis is a demonstration of OCR (Optical Character Recognition) functionality powered by Google Gemini AI. In a production environment, this would extract actual text from images and PDF files with high accuracy."
+                        android:text="[Extracted with Google Gemini Vision API]\n\nThis is a demonstration of OCR (Optical Character Recognition) functionality powered by Google Gemini AI."
                         android:textSize="14sp"
                         android:textColor="@color/black" />
                 </com.google.android.material.card.MaterialCardView>
