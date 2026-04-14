@@ -21,14 +21,13 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import hcmute.edu.vn.documentfileeditor.BuildConfig;
 
 public class CloudConvertService {
     private static final String TAG = "CloudConvertService";
-    
-    // TODO: USER_ACTION_REQUIRED 
-    // Paste your exact CloudConvert API key below. Keep this file purely local and do not push to public GitHub.
-    private static final String API_KEY = "YOUR_CLOUDCONVERT_API_KEY_HERE"; 
-    
+
+    private static final String API_KEY = BuildConfig.CLOUDCONVERT_API_KEY;
+
     private final OkHttpClient client;
     private final ExecutorService executor;
 
@@ -43,15 +42,19 @@ public class CloudConvertService {
 
     public interface CloudConvertCallback {
         void onProgress(String message);
+
         void onSuccess(String pdfLocalPath);
+
         void onFailure(String error);
     }
 
-    public void convertDocumentToPdf(Context context, Uri docUri, String outputFileName, CloudConvertCallback callback) {
+    public void convertDocumentToPdf(Context context, Uri docUri, String outputFileName,
+            CloudConvertCallback callback) {
         executor.execute(() -> {
             try {
-                if (API_KEY.equals("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNTExYjU2YjUwNDQ2NjgzZTllZWRiOTI5NGVkMzI0YWI1MDU4NGE0ODFjMzgyMGE2NDJlNjBiY2I3ZTdjYjJiMjg1OGIzYjZiZTRkNmRmMDQiLCJpYXQiOjE3NzYxNjc1MDMuNDMyODM4LCJuYmYiOjE3NzYxNjc1MDMuNDMyODM5LCJleHAiOjQ5MzE4NDExMDMuNDI3ODc1LCJzdWIiOiI3NTExNzgxMSIsInNjb3BlcyI6WyJ0YXNrLnJlYWQiLCJ0YXNrLndyaXRlIl19.d9Hgd7WNLWhLjuVP01x82ILT3zupy5oyPX_WCxXwPNPFDwp11xotLnq_TjU-6K0zIqdw8DmO8G03mzdKYQQLzIbGaZHA8IK-TW6OP9fFi1CI6X1YEayk1L5qvA3hAmp7oS0RN8HfNI5eSWxJXzMarW9c0sQ6AWbUVCsl6JT0cSJDM4pqZPi8lx-pznfS5u4WEh1JgAQsDlu564Tpa83oFIivAo6jZSy9w7i4gxxZhY32XFW5Lgs56V4FYyv43XxwOB1IgE2qt1ZzUWNevUgrp7veacblOOia8dm6zuijnooYLS_4NWV2cBQDkREhyN1YSs8LOFPySwfNFtGWFSJRIy8LZe94YNAecLwp4em1BK5oEtPvOkVkLXXb3PMRiLx7FNwNdmT-lMk-F-DnpxRuHNwvkmMKbs5J8a_eUwryPpuh_0ck41Gxt7v4YipbP1ta_gQBHCv0_uvr6nBBdG5O-1JR117NU736RgI02EsDVubruhMWoCNly4IpYcJzJRdreCvlMugT2jhvaWZA-t-v_3w126IeS4N9c-CIKjjWEbs6DScdCJ19Z5Rr8Dz5v1_6uxUw0rTvvOBLRFgpdXVfx7ijLqkbWyKlwmNPYSPLTtPOmgsMXlOUHpLM8QmPOpqHs2eb6fDB5WBuw-U26apur10zNtG-wZj_Uml7Usni0AI")) {
-                    postMain(context, callback, false, "Lỗi: Bạn chưa cung cấp API Key thật trong CloudConvertService.java", null);
+                if (API_KEY == null || API_KEY.isEmpty() || API_KEY.equals("AAAAAAAA")) {
+                    postMain(context, callback, false,
+                            "Lỗi: API Key chưa chính xác hoặc không có", null);
                     return;
                 }
 
@@ -87,7 +90,8 @@ public class CloudConvertService {
                 postMain(context, callback, true, "3/4. Đang xử lý dàn trang PDF...", null);
                 String exportUrl = pollJobUntilFinished(jobId);
                 if (exportUrl == null) {
-                    postMain(context, callback, false, "Quá trình convert bị lỗi hoặc hết hạn ngạch (Quota Exceeded).", null);
+                    postMain(context, callback, false, "Quá trình convert bị lỗi hoặc hết hạn ngạch (Quota Exceeded).",
+                            null);
                     return;
                 }
 
@@ -106,7 +110,7 @@ public class CloudConvertService {
                 }
 
                 tempDocFile.delete(); // Cleanup
-                
+
                 // Done!
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                     callback.onSuccess(resultPdf.getAbsolutePath());
@@ -116,7 +120,8 @@ public class CloudConvertService {
                 Log.e(TAG, "CloudConvert loop failed", e);
                 String msg = e.getMessage();
                 if (msg != null && msg.contains("402")) {
-                    postMain(context, callback, false, "Lỗi 402: Bạn đã hết Quota (lượt chuyển đổi) trong ngày hôm nay.", null);
+                    postMain(context, callback, false,
+                            "Lỗi 402: Bạn đã hết Quota (lượt chuyển đổi) trong ngày hôm nay.", null);
                 } else if (msg != null && msg.contains("429")) {
                     postMain(context, callback, false, "Lỗi 429: Gửi request quá nhanh. Vui lòng thử lại sau.", null);
                 } else {
@@ -156,20 +161,21 @@ public class CloudConvertService {
             if (!response.isSuccessful()) {
                 throw new RuntimeException("Create Job failed: " + response.code());
             }
-            if (response.body() == null) return null;
+            if (response.body() == null)
+                return null;
             return new JSONObject(response.body().string()).getJSONObject("data");
         }
     }
 
     private boolean uploadFile(String url, JSONObject params, File file) throws Exception {
         MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        
+
         Iterator<String> keys = params.keys();
         while (keys.hasNext()) {
             String key = keys.next();
             builder.addFormDataPart(key, params.getString(key));
         }
-        
+
         RequestBody fileBody = RequestBody.create(file, MediaType.parse("application/octet-stream"));
         builder.addFormDataPart("file", file.getName(), fileBody);
 
@@ -179,7 +185,7 @@ public class CloudConvertService {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            return response.isSuccessful() || response.code() == 303; 
+            return response.isSuccessful() || response.code() == 303;
         }
     }
 
@@ -196,7 +202,8 @@ public class CloudConvertService {
                 if (!response.isSuccessful()) {
                     throw new RuntimeException("Poll failed: " + response.code());
                 }
-                if (response.body() == null) continue;
+                if (response.body() == null)
+                    continue;
                 JSONObject data = new JSONObject(response.body().string()).getJSONObject("data");
                 String status = data.optString("status");
                 if ("finished".equals(status)) {
@@ -211,12 +218,14 @@ public class CloudConvertService {
     private boolean downloadFile(String url, File target) throws Exception {
         Request request = new Request.Builder().url(url).get().build();
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) return false;
+            if (!response.isSuccessful())
+                return false;
             ResponseBody body = response.body();
-            if (body == null) return false;
+            if (body == null)
+                return false;
 
             try (InputStream is = body.byteStream();
-                 FileOutputStream fos = new FileOutputStream(target)) {
+                    FileOutputStream fos = new FileOutputStream(target)) {
                 byte[] buffer = new byte[4096];
                 int len;
                 while ((len = is.read(buffer)) != -1) {
@@ -229,7 +238,8 @@ public class CloudConvertService {
 
     private String extractUploadUrl(JSONObject jobData) throws Exception {
         JSONArray tasks = jobData.optJSONArray("tasks");
-        if (tasks == null) return null;
+        if (tasks == null)
+            return null;
         for (int i = 0; i < tasks.length(); i++) {
             JSONObject task = tasks.getJSONObject(i);
             if ("import/upload".equals(task.optString("operation"))) {
@@ -241,7 +251,8 @@ public class CloudConvertService {
 
     private JSONObject extractUploadParams(JSONObject jobData) throws Exception {
         JSONArray tasks = jobData.optJSONArray("tasks");
-        if (tasks == null) return null;
+        if (tasks == null)
+            return null;
         for (int i = 0; i < tasks.length(); i++) {
             JSONObject task = tasks.getJSONObject(i);
             if ("import/upload".equals(task.optString("operation"))) {
@@ -253,7 +264,8 @@ public class CloudConvertService {
 
     private String extractExportUrl(JSONObject jobData) throws Exception {
         JSONArray tasks = jobData.optJSONArray("tasks");
-        if (tasks == null) return null;
+        if (tasks == null)
+            return null;
         for (int i = 0; i < tasks.length(); i++) {
             JSONObject task = tasks.getJSONObject(i);
             if ("export/url".equals(task.optString("operation"))) {
@@ -270,8 +282,9 @@ public class CloudConvertService {
         try {
             File tempFile = File.createTempFile(prefix, ".tmp", context.getCacheDir());
             try (InputStream is = context.getContentResolver().openInputStream(uri);
-                 FileOutputStream fos = new FileOutputStream(tempFile)) {
-                if (is == null) return null;
+                    FileOutputStream fos = new FileOutputStream(tempFile)) {
+                if (is == null)
+                    return null;
                 byte[] buffer = new byte[4096];
                 int len;
                 while ((len = is.read(buffer)) != -1) {
