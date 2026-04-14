@@ -13,14 +13,14 @@
         android:orientation="vertical"
         android:background="@color/white"
         android:padding="16dp">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_marginBottom="4dp">
-            
+
             <ImageView
                 android:id="@+id/btn_back"
                 android:layout_width="36dp"
@@ -28,11 +28,11 @@
                 android:padding="6dp"
                 android:src="@drawable/ic_arrow_left"
                 android:background="?attr/selectableItemBackgroundBorderless" />
-                
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Document Scanner"
+                android:text="Document Converter"
                 android:textSize="20sp"
                 android:textColor="@color/black"
                 android:layout_marginStart="8dp" />
@@ -41,9 +41,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Scan documents like a professional scanner"
+            android:text="Select an image or document to convert to PDF"
             android:textSize="14sp"
-            android:textColor="@color/neutral_600" />
+            android:textColor="@color/neutral_600"
+            android:layout_marginStart="44dp" />
     </LinearLayout>
 
     <View
@@ -64,284 +65,368 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Take Photo Action -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- ======== SCAN OPTIONS SECTION ======== -->
+            <LinearLayout
+                android:id="@+id/scan_options_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/blue_300"
-                app:strokeWidth="2dp"> 
-                <!-- Dashed border simulation natively is difficult without a custom drawable, standard stroke works well as prototype -->
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:paddingTop="32dp"
-                    android:paddingBottom="32dp">
-                    
-                    <FrameLayout
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/bg_blue_500_rounded"
-                        android:backgroundTint="@color/blue_100"
-                        android:layout_marginBottom="16dp">
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_camera"
-                            app:tint="@color/blue_600" />
-                    </FrameLayout>
-                    
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Take Photo"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:layout_marginBottom="4dp" />
-                        
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Use camera to scan document"
-                        android:textSize="14sp"
-                        android:textColor="@color/neutral_500" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:orientation="vertical">
 
-            <!-- Upload from Gallery Action -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_200"
-                app:strokeWidth="1dp">
-                
+                <!-- 2 Column Options -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="24dp"
-                    android:gravity="center_vertical">
-                    
-                    <FrameLayout
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_purple_500_rounded"
-                        android:backgroundTint="@color/purple_100">
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_upload"
-                            app:tint="@color/purple_600" />
-                    </FrameLayout>
+                    android:baselineAligned="false"
+                    android:layout_marginBottom="24dp">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
+                    <!-- Image to PDF Action -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_upload_gallery"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Upload from Gallery"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:layout_marginBottom="2dp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Choose from your photos"
-                            android:textSize="14sp"
-                            android:textColor="@color/neutral_500" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/white"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral_300"
+                        app:strokeWidth="2dp">
 
-            <!-- Features -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_200"
-                app:strokeWidth="1dp">
-                
-                <LinearLayout
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:paddingTop="24dp"
+                            android:paddingBottom="24dp">
+
+                            <FrameLayout
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:background="@drawable/bg_purple_500_rounded"
+                                android:backgroundTint="@color/purple_100"
+                                android:layout_marginBottom="12dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_image"
+                                    app:tint="@color/purple_600" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Image"
+                                android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:textColor="@color/black"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="to PDF"
+                                android:textSize="12sp"
+                                android:textColor="@color/neutral_500" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Document (Doc/Excel) to PDF Action -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_upload_document"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/white"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral_300"
+                        app:strokeWidth="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:paddingTop="24dp"
+                            android:paddingBottom="24dp">
+
+                            <FrameLayout
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:background="@drawable/bg_blue_500_rounded"
+                                android:backgroundTint="@color/blue_100"
+                                android:layout_marginBottom="12dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_upload"
+                                    app:tint="@color/blue_600" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Document"
+                                android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:textColor="@color/black"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="to PDF"
+                                android:textSize="12sp"
+                                android:textColor="@color/neutral_500" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+
+                <!-- Features -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-                    
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Features"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:layout_marginBottom="16dp" />
-                        
-                    <!-- Feat 1 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-                        
-                        <FrameLayout
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:background="@drawable/bg_blue_500_rounded"
-                            android:backgroundTint="@color/blue_100">
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_sparkles"
-                                app:tint="@color/blue_600" />
-                        </FrameLayout>
-                        
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="AI Enhancement"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Automatically enhance clarity and remove shadows"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Feat 2 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-                        
-                        <FrameLayout
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:background="@drawable/bg_blue_500_rounded"
-                            android:backgroundTint="@color/green_100"> <!-- Using blue rounded back but with green tint -->
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_grid_3x3"
-                                app:tint="@color/green_600" />
-                        </FrameLayout>
-                        
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Auto Crop"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Detects document edges and crops automatically"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                    android:layout_marginBottom="24dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_200"
+                    app:strokeWidth="1dp">
 
-                    <!-- Feat 3 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-                        
-                        <FrameLayout
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:background="@drawable/bg_purple_500_rounded"
-                            android:backgroundTint="@color/purple_100">
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_zap"
-                                app:tint="@color/purple_600" />
-                        </FrameLayout>
-                        
-                        <LinearLayout
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
+                            android:text="Features"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- Feat 1 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="16dp">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_blue_500_rounded"
+                                android:backgroundTint="@color/blue_100">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_sparkles"
+                                    app:tint="@color/blue_600" />
+                            </FrameLayout>
+
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fast Processing"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="High Quality A4 PDF"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Scales and centers images to standard A4 format"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Feat 2 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_blue_500_rounded"
+                                android:backgroundTint="@color/green_100">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_zap"
+                                    app:tint="@color/green_600" />
+                            </FrameLayout>
+
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Powered by Google Gemini AI"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Instant Conversion"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Fast processing directly on your device"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                </com.google.android.material.card.MaterialCardView>
 
-            <!-- Tips -->
+            </LinearLayout>
+            <!-- END SCAN OPTIONS SECTION -->
+
+            <!-- ======== SCAN RESULT SECTION (Initially GONE) ======== -->
             <LinearLayout
+                android:id="@+id/scan_result_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_tips_card"
-                android:padding="16dp">
-                
-                <TextView
-                    android:layout_width="wrap_content"
+                android:visibility="gone">
+
+                <!-- Processing Overlay -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_processing"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📸 Tips for best results"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="8dp" />
-                    
-                <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/blue_300"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="32dp">
+
+                        <ProgressBar
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginBottom="16dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Saving PDF..."
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Generating document file"
+                            android:textSize="14sp"
+                            android:textColor="@color/neutral_500" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Scanned Image Preview -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_preview"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="• Place document on flat surface\n• Ensure good lighting\n• Keep camera parallel to document\n• Avoid shadows on the document"
-                    android:textColor="@color/neutral_700"
-                    android:textSize="14sp"
-                    android:lineSpacingExtra="4dp"/>
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_200"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="12dp"
+                            android:gravity="center_vertical"
+                            android:background="@drawable/bg_border_bottom">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Selected Image"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black" />
+
+                            <TextView
+                                android:id="@+id/tv_scan_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ready"
+                                android:textSize="12sp"
+                                android:textColor="@color/green_600" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/iv_scanned_image"
+                            android:layout_width="match_parent"
+                            android:layout_height="350dp"
+                            android:scaleType="centerInside"
+                            android:padding="8dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Action Buttons -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_save_pdf"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Convert to PDF"
+                    app:icon="@drawable/ic_download"
+                    app:iconSize="16dp"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_retake"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Choose Another Image"
+                    style="?attr/materialButtonOutlinedStyle"
+                    app:icon="@drawable/ic_image"
+                    app:iconSize="16dp"
+                    app:cornerRadius="8dp" />
+
             </LinearLayout>
+            <!-- END SCAN RESULT SECTION -->
 
         </LinearLayout>
     </ScrollView>

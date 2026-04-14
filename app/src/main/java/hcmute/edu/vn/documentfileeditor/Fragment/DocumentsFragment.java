@@ -311,11 +311,84 @@ public class DocumentsFragment extends Fragment {
 
     private void showDocumentMenu(View anchor, DocumentFB document) {
         android.widget.PopupMenu popupMenu = new android.widget.PopupMenu(requireContext(), anchor);
+        popupMenu.getMenu().add("Đổi tên");
         popupMenu.getMenu().add("Xóa");
+        
         popupMenu.setOnMenuItemClickListener(item -> {
-            Toast.makeText(getContext(), "Đã xóa: " + document.getFileName(), Toast.LENGTH_SHORT).show();
+            if ("Xóa".equals(item.getTitle().toString())) {
+                showLoading(true);
+                documentRepository.deleteDocument(document, new DocumentCallback.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        if (!isAdded()) return;
+                        showLoading(false);
+                        Toast.makeText(getContext(), "Đã xóa: " + document.getFileName(), Toast.LENGTH_SHORT).show();
+                        adapter.removeItem(document.getId());
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        if (!isAdded()) return;
+                        showLoading(false);
+                        Toast.makeText(getContext(), "Xóa thất bại", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else if ("Đổi tên".equals(item.getTitle().toString())) {
+                showRenameDialog(document);
+            }
             return true;
         });
         popupMenu.show();
+    }
+
+    private void showRenameDialog(DocumentFB document) {
+        String currentName = document.getFileName();
+        String extension = "";
+        String baseName = currentName;
+        int lastDotIndex = currentName.lastIndexOf(".");
+        if (lastDotIndex > 0) {
+            baseName = currentName.substring(0, lastDotIndex);
+            extension = currentName.substring(lastDotIndex); // e.g., ".pdf"
+        }
+
+        EditText input = new EditText(requireContext());
+        input.setText(baseName);
+        input.setSelection(baseName.length());
+        int padding = (int) (20 * getResources().getDisplayMetrics().density);
+        input.setPadding(padding, padding, padding, padding);
+
+        final String finalExtension = extension;
+        final String finalBaseName = baseName;
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Đổi tên file")
+                .setView(input)
+                .setPositiveButton("Lưu", (dialog, which) -> {
+                    String newBaseName = input.getText().toString().trim();
+                    if (!newBaseName.isEmpty() && !newBaseName.equals(finalBaseName)) {
+                        String newFileName = newBaseName + finalExtension;
+                        document.setFileName(newFileName);
+                        showLoading(true);
+                        documentRepository.saveDocument(document, new DocumentCallback.UploadCallback() {
+                            @Override
+                            public void onSuccess(DocumentFB documentFB) {
+                                if (!isAdded()) return;
+                                showLoading(false);
+                                adapter.upsertItem(documentFB);
+                                Toast.makeText(getContext(), "Đã đổi tên thành: " + newFileName, Toast.LENGTH_SHORT).show();
+                            }
+                            @Override
+                            public void onProgress(int progressPercentage) {}
+                            @Override
+                            public void onFailure(Exception e) {
+                                if (!isAdded()) return;
+                                showLoading(false);
+                                Toast.makeText(getContext(), "Đổi tên thất bại", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 }

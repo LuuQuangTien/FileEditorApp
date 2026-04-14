@@ -56,6 +56,10 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
     implementation("com.google.mlkit:translate:17.0.3")
 
+    //Convert file
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.json:json:20230227")
+
     //Crop + Cải thiện hình ảnh
     implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
     implementation("org.opencv:opencv:4.13.0")

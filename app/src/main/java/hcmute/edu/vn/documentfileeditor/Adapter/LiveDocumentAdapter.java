@@ -63,6 +63,17 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
         notifyItemInserted(0);
     }
 
+    public void removeItem(String documentId) {
+        for (int i = 0; i < documents.size(); i++) {
+            DocumentFB existing = documents.get(i);
+            if (existing.getId() != null && existing.getId().equals(documentId)) {
+                documents.remove(i);
+                notifyItemRemoved(i);
+                return;
+            }
+        }
+    }
+
     @NonNull
     @Override
     public DocumentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
