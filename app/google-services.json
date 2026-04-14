@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "110996352961",
+    "project_id": "documentfileeditor",
+    "storage_bucket": "documentfileeditor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110996352961:android:2a06945a3826abdd268940",
+        "android_client_info": {
+          "package_name": "hcmute.edu.vn.documentfileeditor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBem0CvsCgFRucQm-SohYZBnT2rQ8tXJ18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

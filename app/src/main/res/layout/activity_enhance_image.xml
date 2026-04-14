@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FAFAFA">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:background="@android:color/white"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_left"
+            app:tint="#171717" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enhance Image"
+                android:textColor="#171717"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI-powered image enhancement"
+                android:textColor="#525252"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Reset"
+            android:textSize="14sp"
+            android:visibility="gone"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_download"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/ic_download"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="#171717"
+            android:enabled="false"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Canvas Preview -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#E5E5E5"
+                android:layout_marginBottom="16dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#F5F5F5">
+
+                    <ImageView
+                        android:id="@+id/image_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="300dp"
+                        android:scaleType="fitCenter" />
+
+                    <!-- Processing Overlay -->
+                    <LinearLayout
+                        android:id="@+id/processing_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#80000000"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_white_rounded_xl"
+                            android:orientation="vertical"
+                            android:padding="16dp"
+                            android:gravity="center">
+
+                            <ProgressBar
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:indeterminateTint="#3B82F6" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Enhancing with AI..."
+                                android:textColor="#171717"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Enhanced Badge -->
+                    <LinearLayout
+                        android:id="@+id/badge_enhanced"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="12dp"
+                        android:background="@drawable/bg_green_100_rounded"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="6dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_check"
+                            app:tint="@android:color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="Enhanced"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Enhancement Options -->
+            <LinearLayout
+                android:id="@+id/options_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E5E5E5"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:background="#FFFFFF">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enhancement Options"
+                            android:textStyle="bold"
+                            android:textColor="#171717"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="12dp" />
+
+                        <GridLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:columnCount="2"
+                            android:alignmentMode="alignMargins"
+                            android:columnOrderPreserved="false"
+                            android:useDefaultMargins="true">
+
+                            <!-- Option: Auto Enhance -->
+                            <LinearLayout
+                                android:id="@+id/btn_auto_enhance"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:background="@drawable/item_option_bg"
+                                android:orientation="vertical"
+                                android:padding="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Auto Enhance"
+                                    android:textStyle="bold"
+                                    android:textColor="#171717"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="AI-powered overall improvement"
+                                    android:textColor="#525252"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <!-- Option: Upscale -->
+                            <LinearLayout
+                                android:id="@+id/btn_upscale"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:background="@drawable/item_option_bg"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:layout_marginStart="8dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Upscale Quality"
+                                    android:textStyle="bold"
+                                    android:textColor="#171717"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Increase resolution"
+                                    android:textColor="#525252"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <!-- Option: Denoise -->
+                            <LinearLayout
+                                android:id="@+id/btn_denoise"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:background="@drawable/item_option_bg"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:layout_marginTop="8dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Reduce Noise"
+                                    android:textStyle="bold"
+                                    android:textColor="#171717"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Remove grain and artifacts"
+                                    android:textColor="#525252"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <!-- Option: Sharpen -->
+                            <LinearLayout
+                                android:id="@+id/btn_sharpen"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:background="@drawable/item_option_bg"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginTop="8dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Sharpen"
+                                    android:textStyle="bold"
+                                    android:textColor="#171717"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Enhance edges and details"
+                                    android:textColor="#525252"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                        </GridLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Results Section (Visible when enhanced) -->
+            <LinearLayout
+                android:id="@+id/results_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E5E5E5"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:background="#FFFFFF">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Results"
+                            android:textStyle="bold"
+                            android:textColor="#171717"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_download_large"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="Download Enhanced Image"
+                            android:textAllCaps="false"
+                            app:cornerRadius="8dp"
+                            app:icon="@drawable/ic_download"
+                            app:iconGravity="textStart"
+                            android:textSize="16sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_try_different"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="Try Different Enhancement"
+                            android:textAllCaps="false"
+                            app:cornerRadius="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:textSize="16sp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Info Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_blue_50_rounded"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI-Powered Enhancement"
+                    android:textStyle="bold"
+                    android:textColor="#171717"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• Automatically improves image quality\n• Enhances clarity and sharpness\n• Reduces noise and artifacts\n• Powered by Google Gemini AI"
+                    android:textColor="#525252"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="4dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

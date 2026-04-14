@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@color/white">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_neutral_100_rounded" />
+
+    <!-- Sheet Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="4dp">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_wand"
+            app:tint="@color/purple_600" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI Writing Assistant"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select an action to improve your document"
+        android:textSize="14sp"
+        android:textColor="@color/neutral_500"
+        android:layout_marginBottom="20dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="500dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_open_chat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+
+                android:minHeight="56dp"
+                android:text="Chat directly with AI"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_500"
+                android:paddingVertical="12dp"
+                android:backgroundTint="@color/neutral_300"
+                app:icon="@drawable/ic_message_square"
+                app:iconTint="@color/white"
+                app:iconPadding="8dp"
+                app:iconGravity="textStart"
+
+                app:cornerRadius="12dp"/>
+
+            <!-- AI Actions Grid: Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_improve"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Improve Writing"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_sparkles"
+                    app:iconSize="20dp"
+                    app:iconTint="@color/purple_600"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_fix"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Fix Grammar"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_check"
+                    app:iconSize="20dp"
+                    app:iconTint="@color/green_600"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <!-- AI Actions Grid: Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_shorten"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Make Shorter"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_shrink_text"
+                    app:iconSize="20dp"
+                    app:iconTint="#F59E0B"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_expand"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Make Longer"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_expand_text"
+                    app:iconSize="20dp"
+                    app:iconTint="#10B981"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <!-- AI Actions Grid: Row 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_translate"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Translate"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_languages"
+                    app:iconSize="20dp"
+                    app:iconTint="#6366F1"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_ai_edit_image"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:minHeight="72dp"
+                    android:gravity="center"
+                    android:text="Edit Image"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_image"
+                    app:iconSize="20dp"
+                    app:iconTint="@color/blue_600"
+                    app:iconGravity="top"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <!-- AI Suggestion Area -->
+            <LinearLayout
+                android:id="@+id/ai_suggestion_area"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_neutral_50_rounded"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="AI Suggestion"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_apply_suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Apply"
+                        android:textSize="12sp"
+                        app:icon="@drawable/ic_check"
+                        app:iconSize="16dp"
+                        app:cornerRadius="8dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_dismiss_suggestion"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/ic_x"
+                        app:iconSize="16dp"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_ai_suggestion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/neutral_700"
+                    android:text="" />
+            </LinearLayout>
+
+            <!-- Tips -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_blue_50_rounded"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💡 Tips"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• Select text to get specific suggestions\n• Use &quot;Improve Writing&quot; for better clarity\n• &quot;Fix Grammar&quot; catches errors automatically\n• Edit images by enhancing quality or removing backgrounds"
+                    android:textColor="@color/neutral_600"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

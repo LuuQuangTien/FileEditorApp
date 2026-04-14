@@ -4,4 +4,5 @@
     <string name="files">Files</string>
     <string name="tools">Tools</string>
     <string name="profile">Profile</string>
+    <string name="scan_document">Scan Document</string>
 </resources>
