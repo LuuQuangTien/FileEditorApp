@@ -203,7 +203,10 @@ public class ExcelEditorActivity extends AppCompatActivity implements Spreadshee
             @Override
             public void onSuccess(DocumentFB documentFB) {
                 currentDocument = documentFB;
-                Toast.makeText(ExcelEditorActivity.this, "Spreadsheet saved locally. Cloud sync continues in background.", Toast.LENGTH_LONG).show();
+                String message = documentRepository.isCloudSyncConfigured()
+                        ? "Spreadsheet saved locally. Cloud sync continues in background."
+                        : "Spreadsheet saved locally. Add Cloudinary config in local.properties to enable cloud sync.";
+                Toast.makeText(ExcelEditorActivity.this, message, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -212,7 +215,10 @@ public class ExcelEditorActivity extends AppCompatActivity implements Spreadshee
 
             @Override
             public void onFailure(Exception e) {
-                Toast.makeText(ExcelEditorActivity.this, "Save failed.", Toast.LENGTH_SHORT).show();
+                String message = e != null && e.getMessage() != null && !e.getMessage().isEmpty()
+                        ? e.getMessage()
+                        : "Save failed.";
+                Toast.makeText(ExcelEditorActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
     }

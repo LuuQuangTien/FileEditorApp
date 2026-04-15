@@ -113,12 +113,10 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
                   DocumentService documentService) {
             fileName.setText(document.getFileName());
 
-            // Use DocumentService for meta (includes size info)
             String sizeText = documentService.formatFileSize(document.getSizeBytes());
             String metaText = documentService.buildMeta(document);
             fileMeta.setText(sizeText + " | " + metaText);
 
-            // Use FileTypeHelper for consistent icon binding
             FileTypeHelper.bindFileType(itemView.getContext(), iconContainer, fileIcon, document.getFileType());
 
             itemView.setOnClickListener(v -> onDocumentClickListener.onDocumentClick(document));

@@ -26,6 +26,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
         buildConfigField("String", "CLOUDCONVERT_API_KEY", "\"${localProperties.getProperty("AAAAAAAA", "")}\"")
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
     }
 
     buildFeatures {
@@ -60,7 +62,6 @@ dependencies {
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
 

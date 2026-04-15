@@ -134,7 +134,10 @@ public class DocumentEditorActivity extends AppCompatActivity {
             @Override
             public void onSuccess(DocumentFB documentFB) {
                 currentDocument = documentFB;
-                Toast.makeText(DocumentEditorActivity.this, "Document saved locally. Cloud sync continues in background.", Toast.LENGTH_LONG).show();
+                String message = documentRepository.isCloudSyncConfigured()
+                        ? "Document saved locally. Cloud sync continues in background."
+                        : "Document saved locally. Add Cloudinary config in local.properties to enable cloud sync.";
+                Toast.makeText(DocumentEditorActivity.this, message, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -143,7 +146,10 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Exception e) {
-                Toast.makeText(DocumentEditorActivity.this, "Save failed.", Toast.LENGTH_SHORT).show();
+                String message = e != null && e.getMessage() != null && !e.getMessage().isEmpty()
+                        ? e.getMessage()
+                        : "Save failed.";
+                Toast.makeText(DocumentEditorActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
     }

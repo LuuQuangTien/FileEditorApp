@@ -12,7 +12,20 @@
           "package_name": "hcmute.edu.vn.documentfileeditor"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "110996352961-0p1itbs7hg5fvlfqjvpbl5uu37rkcdv8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hcmute.edu.vn.documentfileeditor",
+            "certificate_hash": "159e247c81c4ae4797046193ba6911c529e53b03"
+          }
+        },
+        {
+          "client_id": "110996352961-8qpecj34o91ncabmm6uh2ua73qc761sd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBem0CvsCgFRucQm-SohYZBnT2rQ8tXJ18"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110996352961-8qpecj34o91ncabmm6uh2ua73qc761sd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
