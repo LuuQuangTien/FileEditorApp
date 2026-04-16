@@ -24,7 +24,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "GEMINI_API_KEYS", "\"${localProperties.getProperty("GEMINI_API_KEYS", localProperties.getProperty("GEMINI_API_KEY", ""))}\"")
         buildConfigField("String", "CLOUDCONVERT_API_KEY", "\"${localProperties.getProperty("AAAAAAAA", "")}\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
