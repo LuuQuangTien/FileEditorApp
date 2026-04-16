@@ -42,6 +42,8 @@ public class DocumentRepository implements IDocumentRepository {
     private final Handler mainHandler;
     private final Set<String> syncingDocumentIds;
     private final Map<String, DocumentFB> cachedDocumentsById;
+    private volatile boolean hasLoggedCloudSyncDisabled;
+    private final Set<String> emptyPendingDocumentIds;
 
     private DocumentRepository(Context context) {
         DocumentDatabase database = DocumentDatabase.getInstance(context);
@@ -52,6 +54,7 @@ public class DocumentRepository implements IDocumentRepository {
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.syncingDocumentIds = Collections.synchronizedSet(new HashSet<>());
         this.cachedDocumentsById = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.emptyPendingDocumentIds = Collections.synchronizedSet(new HashSet<>());
     }
 
     public static DocumentRepository getInstance(Context context) {
@@ -115,6 +118,7 @@ public class DocumentRepository implements IDocumentRepository {
         ioExecutor.execute(() -> {
             documentMeta.setSizeBytes(localFile.length());
             documentMeta.setLastModified(System.currentTimeMillis());
+            emptyPendingDocumentIds.remove(documentMeta.getId());
             cacheDocument(documentMeta);
             documentDao.upsert(DocumentMapper.toEntity(documentMeta));
             mainHandler.post(() -> {
@@ -128,12 +132,14 @@ public class DocumentRepository implements IDocumentRepository {
     @Override
     public void getDocuments(String userId, DocumentCallback.GetDocumentsCallback callback) {
         List<DocumentFB> cachedDocuments = getCachedDocuments(userId);
+        Log.d(TAG, "getDocuments cached count=" + cachedDocuments.size() + ", ids=" + buildDocumentIdSummary(cachedDocuments));
         if (!cachedDocuments.isEmpty()) {
             mainHandler.post(() -> callback.onSuccess(cachedDocuments));
         }
 
         ioExecutor.execute(() -> {
             List<DocumentFB> localDocuments = DocumentMapper.toModels(documentDao.getDocumentsByUserId(userId));
+            Log.d(TAG, "getDocuments local count=" + localDocuments.size() + ", ids=" + buildDocumentIdSummary(localDocuments));
             cacheDocuments(localDocuments);
             syncPendingDocumentsInBackground(localDocuments);
             if (!localDocuments.isEmpty()) {
@@ -145,8 +151,11 @@ public class DocumentRepository implements IDocumentRepository {
                 public void onSuccess(List<DocumentFB> documents) {
                     ioExecutor.execute(() -> {
                         List<DocumentFB> latestLocalDocuments = DocumentMapper.toModels(documentDao.getDocumentsByUserId(userId));
+                        Log.d(TAG, "getDocuments remote count=" + documents.size() + ", ids=" + buildDocumentIdSummary(documents));
+                        Log.d(TAG, "getDocuments latestLocal count=" + latestLocalDocuments.size() + ", ids=" + buildDocumentIdSummary(latestLocalDocuments));
                         mergeRemoteDocumentsWithLocalState(documents);
                         List<DocumentFB> mergedDocuments = mergeWithLocalOnlyDocuments(documents, latestLocalDocuments);
+                        Log.d(TAG, "getDocuments merged count=" + mergedDocuments.size() + ", ids=" + buildDocumentIdSummary(mergedDocuments));
                         cacheDocuments(mergedDocuments);
                         documentDao.upsertAll(DocumentMapper.toEntities(mergedDocuments));
                         mainHandler.post(() -> callback.onSuccess(mergedDocuments));
@@ -229,6 +238,10 @@ public class DocumentRepository implements IDocumentRepository {
         return cachedDocuments;
     }
 
+    public boolean isCloudSyncConfigured() {
+        return remoteRepository.isCloudSyncConfigured();
+    }
+
     private void completeNewUpload(DocumentFB documentMeta, String localPath) {
         if (documentMeta.getId() == null || documentMeta.getId().isEmpty()) {
             documentMeta.setId(UUID.randomUUID().toString());
@@ -237,6 +250,7 @@ public class DocumentRepository implements IDocumentRepository {
         File localFile = new File(localPath);
         documentMeta.setLocalPath(localPath);
         documentMeta.setSizeBytes(localFile.length());
+        emptyPendingDocumentIds.remove(documentMeta.getId());
         long currentTime = System.currentTimeMillis();
         if (documentMeta.getCreatedDate() == 0L) {
             documentMeta.setCreatedDate(currentTime);
@@ -248,13 +262,20 @@ public class DocumentRepository implements IDocumentRepository {
     }
 
     private void syncDocumentInBackground(DocumentFB documentMeta) {
+        if (!remoteRepository.isCloudSyncConfigured()) {
+            if (!hasLoggedCloudSyncDisabled) {
+                hasLoggedCloudSyncDisabled = true;
+                Log.w(TAG, "Cloud sync is disabled because Cloudinary is not configured.");
+            }
+            return;
+        }
         if (documentMeta == null || documentMeta.getLocalPath() == null || documentMeta.getLocalPath().isEmpty()) {
             return;
         }
         if (documentMeta.getId() == null || documentMeta.getId().isEmpty()) {
             return;
         }
-        if (documentMeta.getCloudStorageUrl() != null && !documentMeta.getCloudStorageUrl().isEmpty()) {
+        if (hasCloudReference(documentMeta)) {
             return;
         }
         if (!syncingDocumentIds.add(documentMeta.getId())) {
@@ -267,6 +288,14 @@ public class DocumentRepository implements IDocumentRepository {
             syncingDocumentIds.remove(documentMeta.getId());
             return;
         }
+        if (localFile.length() == 0L) {
+            if (emptyPendingDocumentIds.add(documentMeta.getId())) {
+                Log.d(TAG, "Skip cloud sync for empty local file until it has content: " + documentMeta.getFileName());
+            }
+            syncingDocumentIds.remove(documentMeta.getId());
+            return;
+        }
+        emptyPendingDocumentIds.remove(documentMeta.getId());
 
         remoteRepository.syncDocument(Uri.fromFile(localFile), documentMeta, new DocumentCallback.UploadCallback() {
             @Override
@@ -292,6 +321,9 @@ public class DocumentRepository implements IDocumentRepository {
 
     private void syncPendingDocumentsInBackground(List<DocumentFB> documents) {
         for (DocumentFB document : documents) {
+            if (document.getSizeBytes() == 0L) {
+                continue;
+            }
             if (document.getCloudStorageUrl() == null || document.getCloudStorageUrl().isEmpty()) {
                 syncDocumentInBackground(document);
             }
@@ -390,5 +422,24 @@ public class DocumentRepository implements IDocumentRepository {
 
         mergedDocuments.sort((left, right) -> Long.compare(getSortTime(right), getSortTime(left)));
         return mergedDocuments;
+    }
+    private boolean hasCloudReference(DocumentFB document) {
+        return document.getCloudStorageUrl() != null && !document.getCloudStorageUrl().isEmpty();
+    }
+
+    private String buildDocumentIdSummary(List<DocumentFB> documents) {
+        if (documents == null || documents.isEmpty()) {
+            return "[]";
+        }
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < documents.size(); i++) {
+            DocumentFB document = documents.get(i);
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(document.getId()).append(":").append(document.getFileName());
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }

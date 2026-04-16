@@ -1,33 +1,41 @@
 package hcmute.edu.vn.documentfileeditor.Model.DataSource.Remote;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
+import hcmute.edu.vn.documentfileeditor.Service.CloudinaryStorageService;
 
 /**
- * Remote data source that handles all Firebase Firestore and Firebase Storage operations.
- * Moved from Dao package to DataSource/Remote to correctly reflect its role in the architecture.
+ * Remote data source that stores binary file content on Cloudinary
+ * and document metadata on Firestore.
  */
 public class FirestoreDocumentRepository {
     private static final String COLLECTION_PATH = "User_Documents";
+    private static final String TAG = "FirestoreDocRepo";
 
     private final FirebaseFirestore db;
-    private final FirebaseStorage storage;
+    private final CloudinaryStorageService cloudinaryStorageService;
+    private final ExecutorService networkExecutor;
 
     public FirestoreDocumentRepository() {
         db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
+        cloudinaryStorageService = new CloudinaryStorageService();
+        networkExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    public boolean isCloudSyncConfigured() {
+        return cloudinaryStorageService.isConfigured();
     }
 
     public void uploadDocument(Uri localFileUri, DocumentFB documentMeta, DocumentCallback.UploadCallback callback) {
@@ -44,19 +52,14 @@ public class FirestoreDocumentRepository {
             return;
         }
 
-        File parent = targetFile.getParentFile();
-        if (parent != null && !parent.exists()) {
-            parent.mkdirs();
-        }
-
-        try {
-            StorageReference ref = storage.getReferenceFromUrl(document.getCloudStorageUrl());
-            ref.getFile(targetFile)
-                    .addOnSuccessListener(task -> callback.onSuccess(targetFile.getAbsolutePath()))
-                    .addOnFailureListener(e -> callback.onFailure(e instanceof Exception ? (Exception) e : new Exception(e)));
-        } catch (Exception e) {
-            callback.onFailure(e);
-        }
+        networkExecutor.execute(() -> {
+            try {
+                cloudinaryStorageService.downloadToFile(document.getCloudStorageUrl(), targetFile);
+                callback.onSuccess(targetFile.getAbsolutePath());
+            } catch (Exception e) {
+                callback.onFailure(e);
+            }
+        });
     }
 
     public void getDocuments(String userId, DocumentCallback.GetDocumentsCallback callback) {
@@ -75,14 +78,6 @@ public class FirestoreDocumentRepository {
     }
 
     public void deleteDocument(DocumentFB document, DocumentCallback.SimpleCallback callback) {
-        if (document.getCloudStorageUrl() != null && !document.getCloudStorageUrl().isEmpty()) {
-            StorageReference fileRef = storage.getReferenceFromUrl(document.getCloudStorageUrl());
-            fileRef.delete()
-                    .addOnSuccessListener(aVoid -> deleteFirestoreDocRef(document.getId(), callback))
-                    .addOnFailureListener(e -> callback.onFailure(e instanceof Exception ? (Exception) e : new Exception(e)));
-            return;
-        }
-
         deleteFirestoreDocRef(document.getId(), callback);
     }
 
@@ -99,35 +94,61 @@ public class FirestoreDocumentRepository {
         }
         final String documentId = resolvedDocumentId;
 
-        String storagePath = "users/"
-                + documentMeta.getUserId()
-                + "/documents/"
-                + documentMeta.getFileName()
-                + "_"
-                + System.currentTimeMillis();
-        StorageReference fileRef = storage.getReference().child(storagePath);
-        UploadTask uploadTask = fileRef.putFile(localFileUri);
+        networkExecutor.execute(() -> {
+            try {
+                File localFile = resolveLocalFile(localFileUri);
+                CloudinaryStorageService.UploadResult uploadResult = cloudinaryStorageService.uploadDocument(
+                        localFile,
+                        buildCloudinaryPublicId(documentMeta),
+                        buildCloudinaryFolder(documentMeta)
+                );
 
-        uploadTask.addOnProgressListener(taskSnapshot -> {
-            int progress = (int) (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-            callback.onProgress(progress);
-        }).continueWithTask(task -> {
-            if (!task.isSuccessful() && task.getException() != null) {
-                throw task.getException();
-            }
-            return fileRef.getDownloadUrl();
-        }).addOnSuccessListener(downloadUri -> {
-            long currentTime = System.currentTimeMillis();
-            documentMeta.setCloudStorageUrl(downloadUri.toString());
-            if (documentMeta.getCreatedDate() == 0L) {
-                documentMeta.setCreatedDate(currentTime);
-            }
-            documentMeta.setLastModified(currentTime);
+                long currentTime = System.currentTimeMillis();
+                documentMeta.setCloudStorageUrl(uploadResult.getSecureUrl());
+                if (documentMeta.getCreatedDate() == 0L) {
+                    documentMeta.setCreatedDate(currentTime);
+                }
+                documentMeta.setLastModified(currentTime);
 
-            db.collection(COLLECTION_PATH).document(documentId).set(documentMeta)
-                    .addOnSuccessListener(aVoid -> callback.onSuccess(documentMeta))
-                    .addOnFailureListener(callback::onFailure);
-        }).addOnFailureListener(callback::onFailure);
+                db.collection(COLLECTION_PATH).document(documentId).set(documentMeta)
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(documentMeta))
+                        .addOnFailureListener(callback::onFailure);
+            } catch (Exception e) {
+                Log.e(TAG, "Cloudinary upload failed for " + documentMeta.getFileName(), e);
+                callback.onFailure(e);
+            }
+        });
+    }
+
+    private File resolveLocalFile(Uri localFileUri) {
+        String path = localFileUri.getPath();
+        if (path == null || path.trim().isEmpty()) {
+            throw new IllegalArgumentException("Khong the doc duong dan file local");
+        }
+
+        File file = new File(path);
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Khong tim thay file local de sync");
+        }
+        return file;
+    }
+
+    private String buildCloudinaryFolder(DocumentFB documentMeta) {
+        String userId = sanitizePathSegment(documentMeta.getUserId(), "anonymous");
+        return "document_file_editor/" + userId;
+    }
+
+    private String buildCloudinaryPublicId(DocumentFB documentMeta) {
+        String documentId = sanitizePathSegment(documentMeta.getId(), "document");
+        String fileName = sanitizePathSegment(documentMeta.getFileName(), "file");
+        return documentId + "_" + fileName;
+    }
+
+    private String sanitizePathSegment(String value, String fallback) {
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+        return value.trim().replaceAll("[\\\\/#?\\[\\]]", "_");
     }
 
     private void deleteFirestoreDocRef(String docId, DocumentCallback.SimpleCallback callback) {

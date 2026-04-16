@@ -52,7 +52,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Powered by Google Gemini AI"
+                android:text="Powered by Google ML Kit"
                 android:textSize="12sp"
                 android:textColor="@color/neutral_600"
                 android:layout_marginStart="4dp" />
@@ -114,13 +114,17 @@
                     </LinearLayout>
 
                     <FrameLayout
+                        android:id="@+id/btn_swap_languages"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:layout_marginStart="12dp"
                         android:layout_marginEnd="12dp"
                         android:layout_marginTop="20dp"
                         android:background="@drawable/bg_blue_500_rounded"
-                        android:backgroundTint="@color/blue_100">
+                        android:backgroundTint="@color/blue_100"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -182,10 +186,13 @@
                             android:textStyle="bold"
                             android:textColor="@color/black" />
                         <ImageView
+                            android:id="@+id/btn_clear_source"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_marginEnd="4dp"
-                            android:src="@drawable/ic_volume_2" />
+                            android:src="@drawable/ic_x"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:visibility="gone" />
                     </LinearLayout>
 
                     <EditText
@@ -206,13 +213,21 @@
                         android:gravity="center_vertical"
                         android:background="@drawable/bg_border_top">
                         <TextView
+                            android:id="@+id/tv_char_count"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="0 characters"
                             android:textSize="12sp"
                             android:textColor="@color/neutral_500" />
-                            
+
+                        <ProgressBar
+                            android:id="@+id/progress_translate"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="12dp"
+                            android:visibility="gone" />
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_translate"
                             android:layout_width="wrap_content"
@@ -226,11 +241,13 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Translation Result (Initially Hidden, but shown for prototype) -->
+            <!-- Translation Result (Initially GONE) -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_translation_result"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:visibility="gone"
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -258,25 +275,23 @@
                             android:textStyle="bold"
                             android:textColor="@color/black" />
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_marginEnd="12dp"
-                            android:src="@drawable/ic_copy" />
-                        <ImageView
+                            android:id="@+id/btn_copy_translation"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_marginEnd="4dp"
-                            android:src="@drawable/ic_volume_2" />
+                            android:src="@drawable/ic_copy"
+                            android:background="?attr/selectableItemBackgroundBorderless" />
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tv_translated_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="150dp"
                         android:padding="16dp"
-                        android:text="Translation generated by Gemini AI. Your text will be accurately translated with proper context."
                         android:textColor="@color/black"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:textIsSelectable="true" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -285,8 +300,9 @@
                         android:padding="12dp"
                         android:gravity="end"
                         android:background="@drawable/bg_border_top">
-                            
+
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_download_translation"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Download"

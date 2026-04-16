@@ -63,6 +63,17 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
         notifyItemInserted(0);
     }
 
+    public void removeItem(String documentId) {
+        for (int i = 0; i < documents.size(); i++) {
+            DocumentFB existing = documents.get(i);
+            if (existing.getId() != null && existing.getId().equals(documentId)) {
+                documents.remove(i);
+                notifyItemRemoved(i);
+                return;
+            }
+        }
+    }
+
     @NonNull
     @Override
     public DocumentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -102,12 +113,10 @@ public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapte
                   DocumentService documentService) {
             fileName.setText(document.getFileName());
 
-            // Use DocumentService for meta (includes size info)
             String sizeText = documentService.formatFileSize(document.getSizeBytes());
             String metaText = documentService.buildMeta(document);
             fileMeta.setText(sizeText + " | " + metaText);
 
-            // Use FileTypeHelper for consistent icon binding
             FileTypeHelper.bindFileType(itemView.getContext(), iconContainer, fileIcon, document.getFileType());
 
             itemView.setOnClickListener(v -> onDocumentClickListener.onDocumentClick(document));

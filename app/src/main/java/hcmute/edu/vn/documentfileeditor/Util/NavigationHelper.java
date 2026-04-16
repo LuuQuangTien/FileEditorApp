@@ -24,6 +24,11 @@ public final class NavigationHelper {
      * Routes to ExcelEditorActivity for EXCEL files, DocumentEditorActivity for all others.
      */
     public static void launchEditor(Context context, DocumentFB document) {
+        if (document.getFileType() == FileType.PDF) {
+            openPdfExternal(context, document);
+            return;
+        }
+
         Class<?> targetActivity = document.getFileType() == FileType.EXCEL
                 ? ExcelEditorActivity.class
                 : DocumentEditorActivity.class;
@@ -38,5 +43,23 @@ public final class NavigationHelper {
                 document.getFileType() != null ? document.getFileType().name() : FileType.WORD.name()
         );
         context.startActivity(intent);
+    }
+
+    private static void openPdfExternal(Context context, DocumentFB document) {
+        try {
+            java.io.File pdfFile = new java.io.File(document.getLocalPath());
+            if (!pdfFile.exists()) {
+                android.widget.Toast.makeText(context, "File không tồn tại", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, context.getPackageName() + ".fileprovider", pdfFile);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "application/pdf");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            android.widget.Toast.makeText(context, "Không có ứng dụng để mở PDF", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 }

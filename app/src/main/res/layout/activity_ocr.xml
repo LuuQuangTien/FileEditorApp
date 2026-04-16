@@ -52,7 +52,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Extract text with Google Gemini AI"
+                android:text="Extract &amp; translate text with ML Kit"
                 android:textSize="12sp"
                 android:textColor="@color/neutral_600"
                 android:layout_marginStart="4dp" />
@@ -76,145 +76,375 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Upload Area -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- ======== INPUT SECTION ======== -->
+            <LinearLayout
+                android:id="@+id/ocr_input_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_300"
-                app:strokeWidth="2dp"> 
+                android:orientation="vertical">
 
+                <!-- Take Photo -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_take_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/blue_300"
+                    app:strokeWidth="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingTop="32dp"
+                        android:paddingBottom="32dp">
+
+                        <FrameLayout
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/bg_blue_500_rounded"
+                            android:backgroundTint="@color/blue_100"
+                            android:layout_marginBottom="16dp">
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_camera"
+                                app:tint="@color/blue_600" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Take Photo"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Capture text from camera"
+                            android:textSize="14sp"
+                            android:textColor="@color/neutral_500" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Upload from Gallery -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_upload_gallery"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_200"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="24dp"
+                        android:gravity="center_vertical">
+
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_purple_500_rounded"
+                            android:backgroundTint="@color/purple_100">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_upload"
+                                app:tint="@color/purple_600" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Upload from Gallery"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:layout_marginBottom="2dp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Choose image to extract text"
+                                android:textSize="14sp"
+                                android:textColor="@color/neutral_500" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Features -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_200"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Powered by Google ML Kit"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- Feat 1 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="16dp">
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="6dp"
+                                android:background="@drawable/bg_blue_500_rounded" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="99%+ Accuracy"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Advanced ML Kit for precise text recognition"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Feat 2 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="16dp">
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="6dp"
+                                android:background="@drawable/bg_blue_500_rounded" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Multi-Language Support"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Latin, Chinese, Japanese text recognition"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Feat 3 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="6dp"
+                                android:background="@drawable/bg_blue_500_rounded" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Built-in Translation"
+                                    android:textColor="@color/black"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Extract text and translate to 8 languages"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+            <!-- END INPUT SECTION -->
+
+            <!-- ======== RESULT SECTION (Initially GONE) ======== -->
+            <LinearLayout
+                android:id="@+id/ocr_result_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Processing Overlay -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_processing"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/blue_300"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="32dp">
+
+                        <ProgressBar
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginBottom="16dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Extracting text..."
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Processing with ML Kit OCR"
+                            android:textSize="14sp"
+                            android:textColor="@color/neutral_500" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- File Info -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_file_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_200"
+                    app:strokeWidth="1dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_blue_500_rounded"
+                            android:backgroundTint="@color/blue_50"
+                            android:layout_marginEnd="12dp">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_image"
+                                app:tint="@color/blue_600" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/tv_file_name_ocr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="image.jpg"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:ellipsize="end"
+                                android:maxLines="1" />
+                            <TextView
+                                android:id="@+id/tv_file_size_ocr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Processing..."
+                                android:textColor="@color/neutral_500"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Extracted Text Area -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:paddingTop="32dp"
-                    android:paddingBottom="32dp">
+                    android:layout_marginBottom="16dp">
 
-                    <FrameLayout
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/bg_blue_500_rounded"
-                        android:backgroundTint="@color/blue_50"
-                        android:layout_marginBottom="16dp">
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_upload"
-                            app:tint="@color/blue_600" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tap to upload a file"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="JPG, PNG, PDF (Max 10MB)"
-                        android:textSize="14sp"
-                        android:textColor="@color/neutral_500"
-                        android:layout_marginBottom="16dp" />
-                        
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_select_file"
-                        android:layout_width="wrap_content"
-                        android:layout_height="44dp"
-                        android:text="Select File"
-                        app:cornerRadius="8dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Uploaded File Info (Mock) -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_200"
-                app:strokeWidth="1dp">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-                    
-                    <FrameLayout
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_blue_500_rounded"
-                        android:backgroundTint="@color/blue_50"
-                        android:layout_marginEnd="12dp">
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_image"
-                            app:tint="@color/blue_600" />
-                    </FrameLayout>
-                    
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
                         <TextView
-                            android:id="@+id/tv_file_name_ocr"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="document-scan.jpg"
+                            android:layout_weight="1"
+                            android:text="Extracted Text"
                             android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:ellipsize="end"
-                            android:maxLines="1" />
-                        <TextView
-                            android:id="@+id/tv_file_size_ocr"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="1,024.00 KB"
-                            android:textColor="@color/neutral_500"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                            android:textColor="@color/black" />
 
-            <!-- Extracted Text Area (Mock) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="24dp">
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Extracted Text"
-                        android:textStyle="bold"
-                        android:textColor="@color/black" />
-                        
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_copy"
                             style="?attr/materialButtonOutlinedStyle"
@@ -223,164 +453,163 @@
                             android:text="Copy"
                             app:icon="@drawable/ic_copy"
                             app:iconSize="16dp"
-                            app:cornerRadius="8dp"
-                            android:layout_marginEnd="8dp" />
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_translate_ocr"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            app:icon="@drawable/ic_languages"
-                            app:iconSize="16dp"
-                            app:cornerRadius="8dp"
-                            android:layout_marginEnd="8dp" />
+                            app:cornerRadius="8dp" />
                     </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="@color/white"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral_200"
+                        app:strokeWidth="1dp">
+
+                        <EditText
+                            android:id="@+id/et_extracted_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="250dp"
+                            android:gravity="top|start"
+                            android:background="@null"
+                            android:padding="16dp"
+                            android:hint="Extracted text will appear here..."
+                            android:textSize="14sp"
+                            android:textColor="@color/black" />
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
-                
+
+                <!-- Translation Section -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="12dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:strokeColor="@color/neutral_200"
                     app:strokeWidth="1dp">
-                    
-                    <EditText
-                        android:id="@+id/et_extracted_text"
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="400dp"
-                        android:gravity="top|start"
-                        android:background="@null"
-                        android:padding="16dp"
-                        android:text="[Extracted with Google Gemini Vision API]\n\nThis is a demonstration of OCR (Optical Character Recognition) functionality powered by Google Gemini AI."
-                        android:textSize="14sp"
-                        android:textColor="@color/black" />
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Translate Extracted Text"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Language Spinners -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="From"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/neutral_600"
+                                    android:layout_marginBottom="4dp" />
+                                <Spinner
+                                    android:id="@+id/spinner_source_ocr"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_rounded_white" />
+                            </LinearLayout>
+
+                            <FrameLayout
+                                android:id="@+id/btn_swap_languages_ocr"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_marginTop="16dp"
+                                android:background="@drawable/bg_blue_500_rounded"
+                                android:backgroundTint="@color/blue_100"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_arrow_left_right"
+                                    app:tint="@color/blue_600" />
+                            </FrameLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="To"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/neutral_600"
+                                    android:layout_marginBottom="4dp" />
+                                <Spinner
+                                    android:id="@+id/spinner_target_ocr"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_rounded_white" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Translate Button -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ProgressBar
+                                android:id="@+id/progress_translate_ocr"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="8dp"
+                                android:visibility="gone" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_translate_ocr"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Translate"
+                                app:icon="@drawable/ic_languages"
+                                app:iconSize="16dp"
+                                app:cornerRadius="8dp" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
 
-            <!-- Features -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_200"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
+                <!-- Action Buttons -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_scan_again"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="Scan Another Image"
+                    style="?attr/materialButtonOutlinedStyle"
+                    app:icon="@drawable/ic_camera"
+                    app:iconSize="16dp"
+                    app:cornerRadius="8dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Powered by Google Gemini AI"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Feat 1 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:layout_marginTop="6dp"
-                            android:background="@drawable/bg_blue_500_rounded" />
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="99%+ Accuracy"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Advanced Gemini Vision API for precise text recognition"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Feat 2 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:layout_marginTop="6dp"
-                            android:background="@drawable/bg_blue_500_rounded" />
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Multi-Language Support"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Supports 100+ languages including Vietnamese, Chinese, Japanese"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Feat 3 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-                        <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:layout_marginTop="6dp"
-                            android:background="@drawable/bg_blue_500_rounded" />
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Smart Detection"
-                                android:textColor="@color/black"
-                                android:textStyle="bold"
-                                android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Recognizes tables, layouts, and handwriting"
-                                android:textColor="@color/neutral_600"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+            <!-- END RESULT SECTION -->
 
         </LinearLayout>
     </ScrollView>
