@@ -178,10 +178,19 @@ public class DocumentEditorActivity extends AppCompatActivity {
     private String getSelectedOrAllText() {
         int start = editor.getSelectionStart();
         int end = editor.getSelectionEnd();
+        String fullText = editor.getText().toString();
+        
         if (start != end && start >= 0 && end > start) {
-            return editor.getText().toString().substring(start, end);
+            return fullText.substring(start, end);
         }
-        return editor.getText().toString();
+        
+        // Tránh tốn quota Token hoặc đè toàn bộ văn bản lớn
+        if (fullText.length() > 5000) {
+            Toast.makeText(this, "Văn bản quá dài. Vui lòng BÔI ĐEN một đoạn cụ thể để xử lý.", Toast.LENGTH_LONG).show();
+            return "";
+        }
+        
+        return fullText;
     }
 
     private void applyTextToEditor(String newText) {
@@ -195,8 +204,10 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private void callAiAction(String prompt, String content, LinearLayout area, TextView resultView) {
-        if (content.trim().isEmpty()) {
-            Toast.makeText(this, "Please enter some text for AI to process", Toast.LENGTH_SHORT).show();
+        if (content.isEmpty()) {
+            if (editor.getText().toString().trim().isEmpty()) {
+                Toast.makeText(this, "Document is empty. Please enter some text.", Toast.LENGTH_SHORT).show();
+            }
             return;
         }
 
@@ -207,6 +218,17 @@ public class DocumentEditorActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String result) {
                 runOnUiThread(() -> resultView.setText(result));
+            }
+
+            @Override
+            public void onTokenUsage(int totalTokenCount) {
+                runOnUiThread(() -> {
+                    if (totalTokenCount > 0) {
+                        Toast.makeText(DocumentEditorActivity.this,
+                                "AI Tokens đã dùng: " + totalTokenCount + " / 1.000.000 (Free Quota)",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
@@ -244,12 +266,40 @@ public class DocumentEditorActivity extends AppCompatActivity {
             String input = etInput.getText().toString().trim();
             if (input.isEmpty()) return;
 
+            // Chống spam API (tránh lỗi 429 - Limit Requests)
+            btnSend.setEnabled(false);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> btnSend.setEnabled(true), 3000); // 3s cooldown
+
             messageList.add(new ChatMessage("user", input));
             adapter.notifyItemInserted(messageList.size() - 1);
             rvMessages.scrollToPosition(messageList.size() - 1);
             etInput.setText("");
 
-            geminiService.processText("Help the user with their request regarding the document", input, new GeminiService.GeminiCallback() {
+            // Đóng gói Context và History cho AI
+            StringBuilder historyAndContext = new StringBuilder();
+            
+            // 1. Gửi ngữ cảnh (khoảng tối đa 2000 ký tự đổ lại quanh con trỏ)
+            int cursor = editor.getSelectionStart();
+            if (cursor < 0) cursor = 0;
+            String fullText = editor.getText().toString();
+            int startCtx = Math.max(0, cursor - 1000);
+            int endCtx = Math.min(fullText.length(), cursor + 1000);
+            if (startCtx < endCtx) {
+                historyAndContext.append("[Context tài liệu quanh vùng chọn]:\n")
+                                 .append(fullText.substring(startCtx, endCtx))
+                                 .append("\n\n");
+            }
+
+            // 2. Gửi lịch sử chat gần nhất (Đỡ tốn token)
+            historyAndContext.append("[Lịch sử chat]:\n");
+            int historyStart = Math.max(1, messageList.size() - 5);
+            for (int i = historyStart; i < messageList.size() - 1; i++) {
+                ChatMessage m = messageList.get(i);
+                historyAndContext.append(m.getRole().equals("user") ? "User: " : "AI: ").append(m.getContent()).append("\n");
+            }
+            historyAndContext.append("\n[Yêu cầu hiện tại]: ").append(input);
+
+            geminiService.processText("Bạn là AI Assistant hỗ trợ soạn thảo. Trả lời ngắn gọn, sử dụng Document Context và Chat History bên dưới để hiểu ngữ cảnh.", historyAndContext.toString(), new GeminiService.GeminiCallback() {
                 @Override
                 public void onSuccess(String result) {
                     runOnUiThread(() -> {
@@ -258,7 +308,21 @@ public class DocumentEditorActivity extends AppCompatActivity {
                         rvMessages.scrollToPosition(messageList.size() - 1);
                     });
                 }
-                @Override public void onError(String error) {}
+                
+                @Override
+                public void onTokenUsage(int totalTokenCount) {
+                    runOnUiThread(() -> {
+                        if (totalTokenCount > 0) {
+                            Toast.makeText(DocumentEditorActivity.this,
+                                    "AI Tokens đã dùng: " + totalTokenCount + " / 1.000.000 (Free Quota)",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                
+                @Override public void onError(String error) {
+                    runOnUiThread(() -> Toast.makeText(DocumentEditorActivity.this, "Lỗi từ Chatbot: " + error, Toast.LENGTH_SHORT).show());
+                }
             });
         });
         dialog.show();
