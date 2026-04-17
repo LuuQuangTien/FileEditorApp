@@ -41,6 +41,7 @@ public class GeminiService {
 
     public interface GeminiCallback {
         void onSuccess(String result);
+        void onTokenUsage(int totalTokenCount);
         void onError(String error);
     }
 
@@ -147,6 +148,15 @@ public class GeminiService {
                     .getJSONArray("parts")
                     .getJSONObject(0)
                     .getString("text");
+            
+            int totalTokens = 0;
+            if (jsonResponse.has("usageMetadata")) {
+                JSONObject usage = jsonResponse.getJSONObject("usageMetadata");
+                totalTokens = usage.optInt("totalTokenCount", 0);
+            }
+            
+            int finalTotalTokens = totalTokens;
+            callback.onTokenUsage(finalTotalTokens);
             callback.onSuccess(result.trim());
         } catch (Exception e) {
             Log.e(TAG, "Parse error: " + e.getMessage());

@@ -10,6 +10,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import hcmute.edu.vn.documentfileeditor.Activity.CropImageActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.EnhanceImageActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.ImageFilterActivity;
+import hcmute.edu.vn.documentfileeditor.Activity.RotateImageActivity;
 import hcmute.edu.vn.documentfileeditor.Activity.ScanActivity;
 import hcmute.edu.vn.documentfileeditor.R;
 
@@ -48,17 +52,26 @@ public class ToolsFragment extends Fragment {
             if (tvName != null) tvName.setText(name);
             if (tvDesc != null) tvDesc.setText(desc);
             
-            // Add click listener for Scan
-            if (includeId == R.id.tool_scan) {
-                toolView.setOnClickListener(v -> {
-                    android.content.Intent intent = new android.content.Intent(getActivity(), ScanActivity.class);
+            toolView.setOnClickListener(v -> {
+                android.content.Intent intent = null;
+                if (includeId == R.id.tool_scan) {
+                    intent = new android.content.Intent(getActivity(), ScanActivity.class);
+                } else if (includeId == R.id.tool_crop) {
+                    intent = new android.content.Intent(getActivity(), CropImageActivity.class);
+                } else if (includeId == R.id.tool_rotate) {
+                    intent = new android.content.Intent(getActivity(), RotateImageActivity.class);
+                } else if (includeId == R.id.tool_filter) {
+                    intent = new android.content.Intent(getActivity(), ImageFilterActivity.class);
+                } else if (includeId == R.id.tool_enhance) {
+                    intent = new android.content.Intent(getActivity(), EnhanceImageActivity.class);
+                }
+
+                if (intent != null) {
                     startActivity(intent);
-                });
-            } else {
-                toolView.setOnClickListener(v -> {
+                } else {
                     android.widget.Toast.makeText(getActivity(), name + " coming soon", android.widget.Toast.LENGTH_SHORT).show();
-                });
-            }
+                }
+            });
         }
     }
 }

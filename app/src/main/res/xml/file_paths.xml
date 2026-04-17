@@ -9,4 +9,7 @@
     <files-path
         name="documents"
         path="documents/" />
+    <files-path
+        name="edited_images"
+        path="edited_images/" />
 </paths>
