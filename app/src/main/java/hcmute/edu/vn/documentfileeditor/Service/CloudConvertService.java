@@ -48,7 +48,7 @@ public class CloudConvertService {
         void onFailure(String error);
     }
 
-    public void convertDocumentToPdf(Context context, Uri docUri, String outputFileName,
+    public void convertDocument(Context context, Uri docUri, String outputFileName, String outputFormat,
             CloudConvertCallback callback) {
         executor.execute(() -> {
             try {
@@ -65,7 +65,7 @@ public class CloudConvertService {
                 }
 
                 postMain(context, callback, true, "1/4. Khởi tạo tác vụ trên CloudConvert...", null);
-                JSONObject jobData = createJob();
+                JSONObject jobData = createJob(outputFormat);
                 if (jobData == null) {
                     postMain(context, callback, false, "Lỗi khi kết nối CloudConvert Server.", null);
                     return;
@@ -87,7 +87,7 @@ public class CloudConvertService {
                     return;
                 }
 
-                postMain(context, callback, true, "3/4. Đang xử lý dàn trang PDF...", null);
+                postMain(context, callback, true, "3/4. Đang xử lý chuyển đổi...", null);
                 String exportUrl = pollJobUntilFinished(jobId);
                 if (exportUrl == null) {
                     postMain(context, callback, false, "Quá trình convert bị lỗi hoặc hết hạn ngạch (Quota Exceeded).",
@@ -95,17 +95,17 @@ public class CloudConvertService {
                     return;
                 }
 
-                postMain(context, callback, true, "4/4. Đang tải PDF về máy...", null);
+                postMain(context, callback, true, "4/4. Đang tải file về máy...", null);
                 File pdfDir = new File(context.getFilesDir(), "scanned_pdfs");
                 if (!pdfDir.exists()) {
                     pdfDir.mkdirs();
                 }
                 String safeName = outputFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-                File resultPdf = new File(pdfDir, safeName + ".pdf");
+                File resultFile = new File(pdfDir, safeName + "." + outputFormat);
 
-                boolean downloaded = downloadFile(exportUrl, resultPdf);
+                boolean downloaded = downloadFile(exportUrl, resultFile);
                 if (!downloaded) {
-                    postMain(context, callback, false, "Lỗi khi tải file PDF về.", null);
+                    postMain(context, callback, false, "Lỗi khi tải file về.", null);
                     return;
                 }
 
@@ -113,7 +113,7 @@ public class CloudConvertService {
 
                 // Done!
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                    callback.onSuccess(resultPdf.getAbsolutePath());
+                    callback.onSuccess(resultFile.getAbsolutePath());
                 });
 
             } catch (Exception e) {
@@ -131,6 +131,12 @@ public class CloudConvertService {
         });
     }
 
+    // Keep the old method for backwards compatibility
+    public void convertDocumentToPdf(Context context, Uri docUri, String outputFileName,
+            CloudConvertCallback callback) {
+        convertDocument(context, docUri, outputFileName, "pdf", callback);
+    }
+
     private void postMain(Context context, CloudConvertCallback callback, boolean isProgress, String msg, String path) {
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
             if (isProgress && msg != null) {
@@ -141,11 +147,11 @@ public class CloudConvertService {
         });
     }
 
-    private JSONObject createJob() throws Exception {
+    private JSONObject createJob(String outputFormat) throws Exception {
         String jsonPayload = "{" +
                 "\"tasks\": {" +
                 "\"import-1\": {\"operation\": \"import/upload\"}," +
-                "\"task-1\": {\"operation\": \"convert\",\"input\": \"import-1\",\"output_format\": \"pdf\"}," +
+                "\"task-1\": {\"operation\": \"convert\",\"input\": \"import-1\",\"output_format\": \"" + outputFormat + "\"}," +
                 "\"export-1\": {\"operation\": \"export/url\",\"input\": \"task-1\"}" +
                 "}}";
 

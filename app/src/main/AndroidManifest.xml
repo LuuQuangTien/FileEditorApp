@@ -78,6 +78,23 @@
             android:exported="false"
             android:theme="@style/Theme.DocumentFileEditor" />
 
+        <activity
+            android:name=".Activity.PdfConvertActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocumentFileEditor" />
+        <activity
+            android:name=".Activity.MergePdfActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocumentFileEditor" />
+        <activity
+            android:name=".Activity.SplitPdfActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocumentFileEditor" />
+        <activity
+            android:name=".Activity.AnnotatePdfActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocumentFileEditor" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

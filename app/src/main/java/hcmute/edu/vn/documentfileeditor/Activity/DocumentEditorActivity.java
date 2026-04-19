@@ -200,7 +200,27 @@ public class DocumentEditorActivity extends AppCompatActivity {
         int start = editor.getSelectionStart();
         int end = editor.getSelectionEnd();
         if (start < end) {
-            editor.getText().setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Editable text = editor.getText();
+            if (active) {
+                text.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } else {
+                // Remove matching StyleSpans in the selection range
+                StyleSpan[] spans = text.getSpans(start, end, StyleSpan.class);
+                for (StyleSpan span : spans) {
+                    if (span.getStyle() == style) {
+                        int spanStart = text.getSpanStart(span);
+                        int spanEnd = text.getSpanEnd(span);
+                        text.removeSpan(span);
+                        // Re-apply span to portions outside the selection
+                        if (spanStart < start) {
+                            text.setSpan(new StyleSpan(style), spanStart, start, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+                        if (spanEnd > end) {
+                            text.setSpan(new StyleSpan(style), end, spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -208,7 +228,25 @@ public class DocumentEditorActivity extends AppCompatActivity {
         int start = editor.getSelectionStart();
         int end = editor.getSelectionEnd();
         if (start < end) {
-            editor.getText().setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Editable text = editor.getText();
+            if (active) {
+                text.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } else {
+                // Remove UnderlineSpans in the selection range
+                UnderlineSpan[] spans = text.getSpans(start, end, UnderlineSpan.class);
+                for (UnderlineSpan span : spans) {
+                    int spanStart = text.getSpanStart(span);
+                    int spanEnd = text.getSpanEnd(span);
+                    text.removeSpan(span);
+                    // Re-apply span to portions outside the selection
+                    if (spanStart < start) {
+                        text.setSpan(new UnderlineSpan(), spanStart, start, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if (spanEnd > end) {
+                        text.setSpan(new UnderlineSpan(), end, spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
         }
     }
 
