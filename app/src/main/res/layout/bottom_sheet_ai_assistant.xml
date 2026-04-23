@@ -204,6 +204,33 @@
                     app:cornerRadius="12dp" />
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_blue_50_rounded"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tv_ai_context_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Context: waiting..."
+                    android:textColor="@color/black"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:id="@+id/tv_ai_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Progress: idle"
+                    android:textColor="@color/neutral_600"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
             <!-- AI Suggestion Area -->
             <LinearLayout
                 android:id="@+id/ai_suggestion_area"

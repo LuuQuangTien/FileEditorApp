@@ -26,6 +26,7 @@ import android.text.style.ImageSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -52,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.List;
 
 import hcmute.edu.vn.documentfileeditor.Adapter.ChatAdapter;
@@ -78,6 +80,9 @@ public class DocumentEditorActivity extends AppCompatActivity {
     private AuthService authService;
     private DocumentFB currentDocument;
     private EditText editor;
+    private static final int MAX_AI_CHARS_PER_REQUEST = 6000;
+    private int aiSelectionStart = -1;
+    private int aiSelectionEnd = -1;
 
     // Word-style formatting flags
     private boolean isBold = false;
@@ -127,6 +132,12 @@ public class DocumentEditorActivity extends AppCompatActivity {
         setupTextWatcher();
 
         FrameLayout fabAi = findViewById(R.id.fab_ai);
+        fabAi.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                captureAiSelection();
+            }
+            return false;
+        });
         fabAi.setOnClickListener(v -> showAIBottomSheet());
     }
 
@@ -430,30 +441,35 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private void showAIBottomSheet() {
+        captureAiSelection();
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_ai_assistant, null);
         dialog.setContentView(sheetView);
 
         LinearLayout suggestionArea = sheetView.findViewById(R.id.ai_suggestion_area);
         TextView tvSuggestion = sheetView.findViewById(R.id.tv_ai_suggestion);
+        TextView tvContextInfo = sheetView.findViewById(R.id.tv_ai_context_info);
+        TextView tvProgress = sheetView.findViewById(R.id.tv_ai_progress);
         
         String contextText = getSelectedOrAllText();
+        tvContextInfo.setText(buildAiContextInfo(contextText));
+        tvProgress.setText(buildAiProgressText(contextText, splitContentForAi(contextText, MAX_AI_CHARS_PER_REQUEST), 0, false));
 
         sheetView.findViewById(R.id.btn_open_chat).setOnClickListener(v -> {
             dialog.dismiss();
             openChatBottomSheet();
         });
 
-        sheetView.findViewById(R.id.btn_ai_improve).setOnClickListener(v -> 
-                callAiAction("Improve writing", contextText, suggestionArea, tvSuggestion));
-        sheetView.findViewById(R.id.btn_ai_fix).setOnClickListener(v -> 
-                callAiAction("Fix grammar", contextText, suggestionArea, tvSuggestion));
-        sheetView.findViewById(R.id.btn_ai_shorten).setOnClickListener(v -> 
-                callAiAction("Make shorter", contextText, suggestionArea, tvSuggestion));
-        sheetView.findViewById(R.id.btn_ai_expand).setOnClickListener(v -> 
-                callAiAction("Make longer", contextText, suggestionArea, tvSuggestion));
-        sheetView.findViewById(R.id.btn_ai_translate).setOnClickListener(v -> 
-                callAiAction("Translate to Vietnamese", contextText, suggestionArea, tvSuggestion));
+        sheetView.findViewById(R.id.btn_ai_improve).setOnClickListener(v ->
+                callAiAction("Improve writing", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_fix).setOnClickListener(v ->
+                callAiAction("Fix grammar", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_shorten).setOnClickListener(v ->
+                callAiAction("Make shorter", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_expand).setOnClickListener(v ->
+                callAiAction("Make longer", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_translate).setOnClickListener(v ->
+                callAiAction("Translate to Vietnamese", contextText, suggestionArea, tvSuggestion, tvProgress));
 
         sheetView.findViewById(R.id.btn_ai_edit_image).setOnClickListener(v -> {
             dialog.dismiss();
@@ -461,7 +477,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
         });
 
         sheetView.findViewById(R.id.btn_apply_suggestion).setOnClickListener(v -> {
-            applyTextToEditor(tvSuggestion.getText().toString());
+            applyTextToEditor(tvSuggestion.getText().toString(), aiSelectionStart, aiSelectionEnd);
             dialog.dismiss();
         });
 
@@ -470,8 +486,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private String getSelectedOrAllText() {
-        int start = editor.getSelectionStart();
-        int end = editor.getSelectionEnd();
+        int start = getSafeSelectionStart();
+        int end = getSafeSelectionEnd();
         if (start != end && start >= 0 && end > start) return editor.getText().toString().substring(start, end);
         return editor.getText().toString();
     }
@@ -486,15 +502,248 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
     }
 
-    private void callAiAction(String prompt, String content, LinearLayout area, TextView resultView) {
+    private void applyTextToEditor(String newText, int start, int end) {
+        if (newText == null) {
+            return;
+        }
+
+        Editable text = editor.getText();
+        int textLength = text.length();
+        int safeStart = Math.max(0, Math.min(start, textLength));
+        int safeEnd = Math.max(0, Math.min(end, textLength));
+
+        if (safeStart < safeEnd) {
+            text.replace(safeStart, safeEnd, newText);
+            editor.setSelection(Math.min(safeStart + newText.length(), editor.getText().length()));
+            return;
+        }
+
+        applyTextToEditor(newText);
+    }
+
+    private void captureAiSelection() {
+        int start = editor.getSelectionStart();
+        int end = editor.getSelectionEnd();
+        if (start >= 0 && end >= 0 && start != end) {
+            aiSelectionStart = Math.min(start, end);
+            aiSelectionEnd = Math.max(start, end);
+            return;
+        }
+
+        aiSelectionStart = -1;
+        aiSelectionEnd = -1;
+    }
+
+    private int getSafeSelectionStart() {
+        if (aiSelectionStart >= 0 && aiSelectionEnd > aiSelectionStart) {
+            return aiSelectionStart;
+        }
+        return editor.getSelectionStart();
+    }
+
+    private int getSafeSelectionEnd() {
+        if (aiSelectionStart >= 0 && aiSelectionEnd > aiSelectionStart) {
+            return aiSelectionEnd;
+        }
+        return editor.getSelectionEnd();
+    }
+
+    private void callAiAction(String prompt, String content, LinearLayout area, TextView resultView,
+                              TextView progressView) {
         if (content.trim().isEmpty()) return;
         resultView.setText("AI is working...");
         area.setVisibility(View.VISIBLE);
-        geminiService.processText(prompt, content, new GeminiService.GeminiCallback() {
-            @Override public void onSuccess(String result) { runOnUiThread(() -> resultView.setText(result)); }
-            @Override public void onTokenUsage(int totalTokenCount) {}
-            @Override public void onError(String error) { runOnUiThread(() -> resultView.setText("Error: " + error)); }
+        String effectivePrompt = buildSingleAnswerPrompt(prompt, content);
+        List<String> chunks = splitContentForAi(content, MAX_AI_CHARS_PER_REQUEST);
+        progressView.setText(buildAiProgressText(content, chunks, 0, true));
+        processAiChunks(effectivePrompt, chunks, 0, new StringBuilder(), resultView, progressView, content);
+    }
+
+    private void processAiChunks(String prompt, List<String> chunks, int index, StringBuilder combinedResult,
+                                 TextView resultView, TextView progressView, String originalContent) {
+        if (index >= chunks.size()) {
+            runOnUiThread(() -> {
+                String finalResult = sanitizeAiRewriteResult(combinedResult.toString());
+                if (finalResult.isEmpty()) {
+                    progressView.setText("Progress: failed - empty AI response");
+                    resultView.setText("Error: AI returned an empty response.");
+                    return;
+                }
+                progressView.setText(buildAiCompletionText(originalContent, chunks));
+                resultView.setText(finalResult);
+            });
+            return;
+        }
+
+        String progressMessage = chunks.size() > 1
+                ? "AI is working... (" + (index + 1) + "/" + chunks.size() + ")"
+                : "AI is working...";
+        runOnUiThread(() -> {
+            resultView.setText(progressMessage);
+            progressView.setText(buildAiProgressText(chunks.get(index), chunks, index, true));
         });
+
+        geminiService.processText(prompt, chunks.get(index), new GeminiService.GeminiCallback() {
+            @Override
+            public void onSuccess(String result) {
+                if (combinedResult.length() > 0) {
+                    combinedResult.append("\n\n");
+                }
+                combinedResult.append(result.trim());
+                processAiChunks(prompt, chunks, index + 1, combinedResult, resultView, progressView,
+                        originalContent);
+            }
+
+            @Override
+            public void onTokenUsage(int totalTokenCount) {}
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    progressView.setText("Progress: failed at chunk " + (index + 1) + "/" + chunks.size()
+                            + " - " + error);
+                    resultView.setText("Error: " + error);
+                });
+            }
+        });
+    }
+
+    private String buildAiContextInfo(String contextText) {
+        boolean hasSelection = aiSelectionStart >= 0 && aiSelectionEnd > aiSelectionStart;
+        String source = hasSelection ? "selected text" : "full document";
+        return "Context: using " + source + " (" + contextText.length() + " chars) - \""
+                + buildPreviewText(contextText) + "\"";
+    }
+
+    private String buildAiProgressText(String currentChunk, List<String> chunks, int index, boolean running) {
+        if (chunks == null || chunks.isEmpty()) {
+            return "Progress: no content";
+        }
+
+        if (!running) {
+            return "Progress: ready - " + chunks.size() + " chunk(s), first chunk " + chunks.get(0).length()
+                    + " chars";
+        }
+
+        int safeIndex = Math.max(0, Math.min(index, chunks.size() - 1));
+        return String.format(Locale.US, "Progress: chunk %d/%d - %d chars - \"%s\"",
+                safeIndex + 1, chunks.size(), currentChunk.length(), buildPreviewText(currentChunk));
+    }
+
+    private String buildAiCompletionText(String originalContent, List<String> chunks) {
+        return "Progress: done - processed " + originalContent.length() + " chars in "
+                + chunks.size() + " chunk(s)";
+    }
+
+    private String buildSingleAnswerPrompt(String action, String content) {
+        boolean hasSelection = aiSelectionStart >= 0 && aiSelectionEnd > aiSelectionStart;
+        String scope = hasSelection ? "selected text" : "document text";
+        return "You are editing " + scope + ". Task: " + action + ". "
+                + "Return exactly one final rewritten version only. "
+                + "Do not provide multiple options. "
+                + "Do not explain. "
+                + "Do not use bullet points, numbering, headings, markdown, labels, or quotation marks. "
+                + "Keep the response concise and ready to paste directly into the document. "
+                + "If the input is a single sentence, return a single sentence only.";
+    }
+
+    private String sanitizeAiRewriteResult(String rawResult) {
+        if (rawResult == null) {
+            return "";
+        }
+
+        String trimmed = rawResult.trim();
+        if (trimmed.isEmpty()) {
+            return trimmed;
+        }
+
+        String[] lines = trimmed.split("\\r?\\n");
+        for (String line : lines) {
+            String candidate = line.trim();
+            if (candidate.isEmpty()) {
+                continue;
+            }
+
+            if (candidate.startsWith("#") || candidate.startsWith("*")) {
+                continue;
+            }
+
+            candidate = candidate.replaceFirst("^\\d+[.)]\\s*", "");
+            candidate = candidate.replaceFirst("^[-*•]\\s*", "");
+
+            if (!candidate.isEmpty()) {
+                return stripWrappingQuotes(candidate);
+            }
+        }
+
+        return stripWrappingQuotes(trimmed);
+    }
+
+    private String stripWrappingQuotes(String text) {
+        String normalized = text == null ? "" : text.trim();
+        if ((normalized.startsWith("\"") && normalized.endsWith("\""))
+                || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+            return normalized.substring(1, normalized.length() - 1).trim();
+        }
+        return normalized;
+    }
+
+    private String buildPreviewText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String normalized = text.replace("\n", "\\n").trim();
+        if (normalized.length() <= 40) {
+            return normalized;
+        }
+        return normalized.substring(0, 37) + "...";
+    }
+
+    private List<String> splitContentForAi(String content, int maxCharsPerChunk) {
+        List<String> chunks = new ArrayList<>();
+        String normalizedContent = content == null ? "" : content.trim();
+        if (normalizedContent.isEmpty()) {
+            return chunks;
+        }
+
+        if (normalizedContent.length() <= maxCharsPerChunk) {
+            chunks.add(normalizedContent);
+            return chunks;
+        }
+
+        int start = 0;
+        while (start < normalizedContent.length()) {
+            int end = Math.min(start + maxCharsPerChunk, normalizedContent.length());
+            if (end < normalizedContent.length()) {
+                int paragraphBreak = normalizedContent.lastIndexOf("\n\n", end);
+                if (paragraphBreak > start + (maxCharsPerChunk / 2)) {
+                    end = paragraphBreak;
+                } else {
+                    int lineBreak = normalizedContent.lastIndexOf('\n', end);
+                    if (lineBreak > start + (maxCharsPerChunk / 2)) {
+                        end = lineBreak;
+                    } else {
+                        int spaceBreak = normalizedContent.lastIndexOf(' ', end);
+                        if (spaceBreak > start + (maxCharsPerChunk / 2)) {
+                            end = spaceBreak;
+                        }
+                    }
+                }
+            }
+
+            String chunk = normalizedContent.substring(start, end).trim();
+            if (!chunk.isEmpty()) {
+                chunks.add(chunk);
+            }
+
+            start = end;
+            while (start < normalizedContent.length() && Character.isWhitespace(normalizedContent.charAt(start))) {
+                start++;
+            }
+        }
+
+        return chunks;
     }
 
     private void openChatBottomSheet() {
@@ -733,4 +982,3 @@ public class DocumentEditorActivity extends AppCompatActivity {
         return "application/octet-stream";
     }
 }
-

@@ -11,10 +11,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.material.button.MaterialButton;
 
 import hcmute.edu.vn.documentfileeditor.R;
@@ -28,11 +35,17 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText etPassword;
     private EditText etConfirmPassword;
     private MaterialButton btnRegister;
+    private MaterialButton btnGoogleRegister;
 
     private CheckBox cbTerms;
     private LinearLayout llPasswordStrength;
-    private View viewStrength1, viewStrength2, viewStrength3;
+    private View viewStrength1;
+    private View viewStrength2;
+    private View viewStrength3;
     private TextView tvPasswordStrength;
+
+    private GoogleSignInClient googleSignInClient;
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,6 +59,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_confirm_password);
         btnRegister = findViewById(R.id.btn_register);
+        btnGoogleRegister = findViewById(R.id.btn_google_register);
         TextView tvSignIn = findViewById(R.id.tv_sign_in);
 
         cbTerms = findViewById(R.id.cb_terms);
@@ -55,7 +69,10 @@ public class RegisterActivity extends AppCompatActivity {
         viewStrength3 = findViewById(R.id.view_strength_3);
         tvPasswordStrength = findViewById(R.id.tv_password_strength);
 
+        setupGoogleSignIn();
+
         btnRegister.setOnClickListener(v -> register());
+        btnGoogleRegister.setOnClickListener(v -> registerWithGoogle());
         tvSignIn.setOnClickListener(v -> finish());
 
         etPassword.addTextChangedListener(new TextWatcher() {
@@ -70,6 +87,53 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {}
         });
+    }
+
+    private void setupGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getData() == null) {
+                        setGoogleLoading(false);
+                        Toast.makeText(this, "Google sign-up cancelled", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    try {
+                        GoogleSignInAccount account = GoogleSignIn.getSignedInAccountFromIntent(result.getData())
+                                .getResult(ApiException.class);
+                        String idToken = account != null ? account.getIdToken() : null;
+                        if (idToken == null || idToken.isEmpty()) {
+                            setGoogleLoading(false);
+                            Toast.makeText(this, "Missing Google ID token", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        authService.loginWithGoogle(idToken, new AuthService.AuthCallback() {
+                            @Override
+                            public void onSuccess() {
+                                setGoogleLoading(false);
+                                Toast.makeText(RegisterActivity.this, "Google account connected", Toast.LENGTH_SHORT).show();
+                                openMainAndClearBackStack();
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                setGoogleLoading(false);
+                                Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    } catch (ApiException e) {
+                        setGoogleLoading(false);
+                        Toast.makeText(this, "Google sign-up failed: " + e.getStatusCode(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
     }
 
     private void updatePasswordStrength(String password) {
@@ -88,19 +152,19 @@ public class RegisterActivity extends AppCompatActivity {
             viewStrength1.setBackgroundColor(redColor);
             viewStrength2.setBackgroundColor(neutralColor);
             viewStrength3.setBackgroundColor(neutralColor);
-            tvPasswordStrength.setText("Yếu");
+            tvPasswordStrength.setText("Weak");
             tvPasswordStrength.setTextColor(redColor);
         } else if (password.length() < 10) {
             viewStrength1.setBackgroundColor(yellowColor);
             viewStrength2.setBackgroundColor(yellowColor);
             viewStrength3.setBackgroundColor(neutralColor);
-            tvPasswordStrength.setText("Trung bình");
+            tvPasswordStrength.setText("Medium");
             tvPasswordStrength.setTextColor(yellowColor);
         } else {
             viewStrength1.setBackgroundColor(greenColor);
             viewStrength2.setBackgroundColor(greenColor);
             viewStrength3.setBackgroundColor(greenColor);
-            tvPasswordStrength.setText("Mạnh");
+            tvPasswordStrength.setText("Strong");
             tvPasswordStrength.setTextColor(greenColor);
         }
     }
@@ -116,7 +180,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         if (!cbTerms.isChecked()) {
-            Toast.makeText(this, "Vui lòng đồng ý với điều khoản sử dụng", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please agree to the terms of use", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -135,6 +199,17 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void registerWithGoogle() {
+        if (!cbTerms.isChecked()) {
+            Toast.makeText(this, "Please agree to the terms of use", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        setGoogleLoading(true);
+        googleSignInClient.signOut().addOnCompleteListener(task ->
+                googleSignInLauncher.launch(googleSignInClient.getSignInIntent()));
     }
 
     private boolean isValidInput(String name, String email, String password, String confirmPassword) {
@@ -167,7 +242,12 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void setLoading(boolean isLoading) {
         btnRegister.setEnabled(!isLoading);
-        btnRegister.setText(isLoading ? "Creating account..." : "Đăng ký");
+        btnRegister.setText(isLoading ? "Creating account..." : "Dang ky");
+    }
+
+    private void setGoogleLoading(boolean isLoading) {
+        btnGoogleRegister.setEnabled(!isLoading);
+        btnGoogleRegister.setText(isLoading ? "Connecting..." : "Google");
     }
 
     private void openMainAndClearBackStack() {

@@ -3,6 +3,7 @@ package hcmute.edu.vn.documentfileeditor.Service;
 import android.util.Patterns;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
@@ -61,6 +62,23 @@ public class AuthService {
                         String message = task.getException() != null
                                 ? task.getException().getMessage()
                                 : "Login failed";
+                        callback.onFailure(message);
+                    }
+                });
+    }
+
+    /**
+     * Signs in with a Google ID token through Firebase Auth.
+     */
+    public void loginWithGoogle(String idToken, AuthCallback callback) {
+        auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.onSuccess();
+                    } else {
+                        String message = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Google sign-in failed";
                         callback.onFailure(message);
                     }
                 });
