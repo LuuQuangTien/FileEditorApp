@@ -1,0 +1,88 @@
+@startuml
+left to right direction
+actor "User" as user
+
+' External Systems
+actor "Firebase Authentication" as fb_auth <<External System>>
+actor "Firebase Database" as fb_db <<External System>>
+actor "Cloudinary Storage" as cloudinary <<External System>>
+
+package "Authentication" {
+  usecase "Login" as UC_Login
+  usecase "Register" as UC_Register
+}
+
+package "Document Management" {
+  usecase "View Documents" as UC_ViewDocs
+  usecase "Create Missing Folder" as UC_CreateFolder
+  usecase "Upload File" as UC_Upload
+  usecase "Download File" as UC_Download
+  usecase "Delete File" as UC_Delete
+}
+
+package "Document Tools" {
+  usecase "Scan Document" as UC_Scan
+  usecase "Translate Text" as UC_Translate
+  usecase "OCR (Extract Text)" as UC_OCR
+}
+
+package "Image Editing" {
+  usecase "Filter Image" as UC_Filter
+  usecase "Rotate Image" as UC_Rotate
+  usecase "Crop Image" as UC_Crop
+  usecase "Enhance Image" as UC_Enhance
+}
+
+package "Document Editing" {
+  usecase "Edit Document" as UC_EditDoc
+  usecase "Edit Excel" as UC_EditExcel
+}
+
+package "PDF Tools" {
+  usecase "Convert PDF" as UC_ConvertPdf
+  usecase "Merge PDF" as UC_MergePdf
+  usecase "Split PDF" as UC_SplitPdf
+  usecase "Annotate PDF" as UC_AnnotatePdf
+}
+
+' User interactions
+user --> UC_Login
+user --> UC_Register
+
+user --> UC_ViewDocs
+user --> UC_Upload
+user --> UC_Download
+user --> UC_Delete
+UC_ViewDocs ..> UC_CreateFolder : <<includes>>
+
+user --> UC_Scan
+user --> UC_Translate
+user --> UC_OCR
+
+user --> UC_Filter
+user --> UC_Rotate
+user --> UC_Crop
+user --> UC_Enhance
+
+user --> UC_EditDoc
+user --> UC_EditExcel
+
+user --> UC_ConvertPdf
+user --> UC_MergePdf
+user --> UC_SplitPdf
+user --> UC_AnnotatePdf
+
+' System interactions
+UC_Login --> fb_auth : "Xác thực user"
+UC_Register --> fb_auth : "Tạo account"
+
+UC_Upload --> cloudinary : "Lưu trữ file vật lý"
+UC_Upload --> fb_db : "Lưu trữ metadata"
+
+UC_Download --> cloudinary : "Tải file dữ liệu"
+UC_ViewDocs --> fb_db : "Lấy danh sách & metadata"
+
+UC_Delete --> cloudinary : "Xóa file vật lý"
+UC_Delete --> fb_db : "Xóa metadata"
+
+@enduml

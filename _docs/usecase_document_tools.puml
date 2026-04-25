@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Camera Device" as camera <<Device>>
+actor "ML Kit / Cloud Vision" as ml_api <<External System>>
+actor "Translation API / Gemini API" as trans_api <<External System>>
+
+package "Document Tools Module" {
+  usecase "Scan Document" as UC_Scan
+  usecase "Auto-detect Document Edges" as UC_DetectEdge
+  usecase "Extract Text (OCR)" as UC_OCR
+  usecase "Translate Text" as UC_Translate
+  usecase "Copy/Export Text" as UC_ExportText
+}
+
+user --> UC_Scan
+user --> UC_OCR
+user --> UC_Translate
+
+UC_Scan --> camera
+UC_Scan ..> UC_DetectEdge : <<include>>
+
+UC_OCR --> ml_api : "Nhận diện ký tự quang học"
+UC_OCR ..> UC_ExportText : <<extend>>
+
+UC_Translate --> trans_api : "Gửi văn bản và ngôn ngữ đích"
+@enduml

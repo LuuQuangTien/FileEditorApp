@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Firebase Authentication" as fb_auth <<External System>>
+actor "Google Sign-In API" as google_api <<External System>>
+
+package "Authentication Module" {
+  usecase "Login with Email/Password" as UC_LoginEmail
+  usecase "Login with Google" as UC_LoginGoogle
+  usecase "Register new Account" as UC_Register
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Logout" as UC_Logout
+  
+  usecase "Validate Credentials" as UC_Validate
+}
+
+user --> UC_LoginEmail
+user --> UC_LoginGoogle
+user --> UC_Register
+user --> UC_ResetPassword
+user --> UC_Logout
+
+UC_LoginEmail ..> UC_Validate : <<include>>
+UC_Register ..> UC_Validate : <<include>>
+
+UC_LoginEmail --> fb_auth
+UC_Register --> fb_auth
+UC_ResetPassword --> fb_auth
+UC_Logout --> fb_auth
+UC_LoginGoogle --> google_api
+google_api --> fb_auth : "Trao đổi Auth Token"
+@enduml

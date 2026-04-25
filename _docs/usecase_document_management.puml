@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Firebase Database" as fb_db <<External System>>
+actor "Cloudinary Storage" as cloudinary <<External System>>
+
+package "Document Management Module" {
+  usecase "View Document List" as UC_ViewList
+  usecase "Search Documents" as UC_Search
+  usecase "Filter/Sort Documents" as UC_Filter
+  usecase "Upload Document" as UC_Upload
+  usecase "Download Document" as UC_Download
+  usecase "Delete Document" as UC_Delete
+  usecase "Create Missing Folder" as UC_CreateFolder
+  usecase "View Document Properties" as UC_ViewProps
+}
+
+user --> UC_ViewList
+user --> UC_Search
+user --> UC_Filter
+user --> UC_Upload
+user --> UC_Download
+user --> UC_Delete
+user --> UC_ViewProps
+
+UC_ViewList ..> UC_CreateFolder : <<include>>
+
+UC_Upload --> cloudinary : "Lưu file vật lý/Hình ảnh"
+UC_Upload --> fb_db : "Lưu metadata & URL"
+
+UC_Download --> cloudinary : "Tải stream dữ liệu file"
+UC_Delete --> cloudinary : "Xoá file vật lý"
+UC_Delete --> fb_db : "Xóa bản ghi metadata"
+
+UC_ViewList --> fb_db : "Truy vấn danh sách metadata"
+UC_Search --> fb_db : "Tìm kiếm theo metadata (Tên)"
+UC_ViewProps --> fb_db : "Lấy chi tiết file"
+@enduml
