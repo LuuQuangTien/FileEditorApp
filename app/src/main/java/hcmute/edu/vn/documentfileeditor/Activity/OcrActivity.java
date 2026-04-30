@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -73,7 +74,7 @@ public class OcrActivity extends AppCompatActivity {
     // State
     private Uri currentPhotoUri;
     private ActivityResultLauncher<Intent> cameraLauncher;
-    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<PickVisualMediaRequest> galleryLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,14 +131,11 @@ public class OcrActivity extends AppCompatActivity {
         );
 
         galleryLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        Uri imageUri = result.getData().getData();
-                        if (imageUri != null) {
-                            currentPhotoUri = imageUri;
-                            processImage(imageUri);
-                        }
+                new ActivityResultContracts.PickVisualMedia(),
+                uri -> {
+                    if (uri != null) {
+                        currentPhotoUri = uri;
+                        processImage(uri);
                     }
                 }
         );
@@ -168,8 +166,9 @@ public class OcrActivity extends AppCompatActivity {
         // Upload from Gallery
         if (cardUploadGallery != null) {
             cardUploadGallery.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                galleryLauncher.launch(intent);
+                galleryLauncher.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build());
             });
         }
 
@@ -272,7 +271,6 @@ public class OcrActivity extends AppCompatActivity {
         if (tvFileSize != null) tvFileSize.setText("Đang xử lý...");
         if (etExtractedText != null) etExtractedText.setText("");
 
-        // Run OCR via ScanService
         scanService.extractText(this, imageUri, ScanService.SCRIPT_LATIN, new ScanService.OcrCallback() {
             @Override
             public void onSuccess(String extractedText) {

@@ -134,7 +134,8 @@ public class MergePdfActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnAddPdfs.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("application/pdf");
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             multiPdfPicker.launch(intent);

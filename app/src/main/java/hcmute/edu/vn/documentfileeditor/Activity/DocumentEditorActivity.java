@@ -38,6 +38,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -83,6 +86,14 @@ public class DocumentEditorActivity extends AppCompatActivity {
     private static final int MAX_AI_CHARS_PER_REQUEST = 6000;
     private int aiSelectionStart = -1;
     private int aiSelectionEnd = -1;
+
+    // Image picker launcher
+    private final ActivityResultLauncher<PickVisualMediaRequest> imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.PickVisualMedia(), uri -> {
+                if (uri != null) {
+                    insertImageAtCursor(uri);
+                }
+            });
 
     // Word-style formatting flags
     private boolean isBold = false;
@@ -165,7 +176,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
             updateButtonState(btnUnderline, isUnderline);
             applyUnderlineToSelection(isUnderline);
         });
-        
+
         // Alignment Buttons
         findViewById(R.id.btn_align_left).setOnClickListener(v -> applyAlignment(Layout.Alignment.ALIGN_NORMAL));
         findViewById(R.id.btn_align_center).setOnClickListener(v -> applyAlignment(Layout.Alignment.ALIGN_CENTER));
@@ -177,33 +188,40 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
         // Insert Image Button
         findViewById(R.id.btn_insert_image).setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(intent, 1001);
+            imagePickerLauncher.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
         });
     }
 
     private void updateButtonState(View view, boolean isActive) {
-        view.setBackgroundColor(isActive ? getResources().getColor(R.color.blue_100, null) : android.graphics.Color.TRANSPARENT);
+        view.setBackgroundColor(
+                isActive ? getResources().getColor(R.color.blue_100, null) : android.graphics.Color.TRANSPARENT);
     }
 
     private void setupTextWatcher() {
         editor.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (count > before) { // New text added
                     int end = start + count;
                     Editable text = editor.getText();
-                    if (isBold) text.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    if (isItalic) text.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    if (isUnderline) text.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    if (isBold)
+                        text.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    if (isItalic)
+                        text.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    if (isUnderline)
+                        text.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
     }
 
@@ -304,34 +322,26 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
-            Uri imageUri = data.getData();
-            insertImageAtCursor(imageUri);
-        }
-    }
-
     private void insertImageAtCursor(Uri uri) {
         try {
             InputStream is = getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(is);
-            
+
             // Resize bitmap to fit screen width roughly
             int width = editor.getWidth() - editor.getPaddingLeft() - editor.getPaddingRight();
-            if (width <= 0) width = 800;
+            if (width <= 0)
+                width = 800;
             float ratio = (float) bitmap.getHeight() / bitmap.getWidth();
-            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, width, (int)(width * ratio), true);
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, width, (int) (width * ratio), true);
 
             ImageSpan span = new ImageSpan(this, scaled);
             int start = editor.getSelectionStart();
-            
+
             // We use a dummy space character to hold the image span
-            editor.getText().insert(start, "\n "); 
+            editor.getText().insert(start, "\n ");
             editor.getText().setSpan(span, start + 1, start + 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             editor.getText().insert(start + 2, "\n");
-            
+
             Toast.makeText(this, "Image inserted successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e("DocumentEditor", "Failed to insert image", e);
@@ -370,11 +380,11 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
     /**
      * Ensures that currentDocument has a valid local file path.
-     * If localPath is null/empty or the file doesn't exist, creates a new local file
-     * in the app's documents directory.
+     * If localPath is null/empty or the file doesn't exist, creates a new local file in the app's documents directory.
      */
     private void ensureLocalPath() {
-        if (currentDocument == null) return;
+        if (currentDocument == null)
+            return;
 
         String localPath = currentDocument.getLocalPath();
         if (localPath != null && !localPath.isEmpty() && new File(localPath).exists()) {
@@ -432,10 +442,15 @@ public class DocumentEditorActivity extends AppCompatActivity {
                 currentDocument = documentFB;
                 Toast.makeText(DocumentEditorActivity.this, "Document saved successfully!", Toast.LENGTH_SHORT).show();
             }
-            @Override public void onProgress(int progressPercentage) {}
+
+            @Override
+            public void onProgress(int progressPercentage) {
+            }
+
             @Override
             public void onFailure(Exception e) {
-                Toast.makeText(DocumentEditorActivity.this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(DocumentEditorActivity.this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT)
+                        .show();
             }
         });
     }
@@ -450,26 +465,27 @@ public class DocumentEditorActivity extends AppCompatActivity {
         TextView tvSuggestion = sheetView.findViewById(R.id.tv_ai_suggestion);
         TextView tvContextInfo = sheetView.findViewById(R.id.tv_ai_context_info);
         TextView tvProgress = sheetView.findViewById(R.id.tv_ai_progress);
-        
+
         String contextText = getSelectedOrAllText();
         tvContextInfo.setText(buildAiContextInfo(contextText));
-        tvProgress.setText(buildAiProgressText(contextText, splitContentForAi(contextText, MAX_AI_CHARS_PER_REQUEST), 0, false));
+        tvProgress.setText(
+                buildAiProgressText(contextText, splitContentForAi(contextText, MAX_AI_CHARS_PER_REQUEST), 0, false));
 
         sheetView.findViewById(R.id.btn_open_chat).setOnClickListener(v -> {
             dialog.dismiss();
             openChatBottomSheet();
         });
 
-        sheetView.findViewById(R.id.btn_ai_improve).setOnClickListener(v ->
-                callAiAction("Improve writing", contextText, suggestionArea, tvSuggestion, tvProgress));
-        sheetView.findViewById(R.id.btn_ai_fix).setOnClickListener(v ->
-                callAiAction("Fix grammar", contextText, suggestionArea, tvSuggestion, tvProgress));
-        sheetView.findViewById(R.id.btn_ai_shorten).setOnClickListener(v ->
-                callAiAction("Make shorter", contextText, suggestionArea, tvSuggestion, tvProgress));
-        sheetView.findViewById(R.id.btn_ai_expand).setOnClickListener(v ->
-                callAiAction("Make longer", contextText, suggestionArea, tvSuggestion, tvProgress));
-        sheetView.findViewById(R.id.btn_ai_translate).setOnClickListener(v ->
-                callAiAction("Translate to Vietnamese", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_improve).setOnClickListener(
+                v -> callAiAction("Improve writing", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_fix).setOnClickListener(
+                v -> callAiAction("Fix grammar", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_shorten).setOnClickListener(
+                v -> callAiAction("Make shorter", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_expand).setOnClickListener(
+                v -> callAiAction("Make longer", contextText, suggestionArea, tvSuggestion, tvProgress));
+        sheetView.findViewById(R.id.btn_ai_translate).setOnClickListener(
+                v -> callAiAction("Translate to Vietnamese", contextText, suggestionArea, tvSuggestion, tvProgress));
 
         sheetView.findViewById(R.id.btn_ai_edit_image).setOnClickListener(v -> {
             dialog.dismiss();
@@ -481,14 +497,16 @@ public class DocumentEditorActivity extends AppCompatActivity {
             dialog.dismiss();
         });
 
-        sheetView.findViewById(R.id.btn_dismiss_suggestion).setOnClickListener(v -> suggestionArea.setVisibility(View.GONE));
+        sheetView.findViewById(R.id.btn_dismiss_suggestion)
+                .setOnClickListener(v -> suggestionArea.setVisibility(View.GONE));
         dialog.show();
     }
 
     private String getSelectedOrAllText() {
         int start = getSafeSelectionStart();
         int end = getSafeSelectionEnd();
-        if (start != end && start >= 0 && end > start) return editor.getText().toString().substring(start, end);
+        if (start != end && start >= 0 && end > start)
+            return editor.getText().toString().substring(start, end);
         return editor.getText().toString();
     }
 
@@ -549,8 +567,9 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private void callAiAction(String prompt, String content, LinearLayout area, TextView resultView,
-                              TextView progressView) {
-        if (content.trim().isEmpty()) return;
+            TextView progressView) {
+        if (content.trim().isEmpty())
+            return;
         resultView.setText("AI is working...");
         area.setVisibility(View.VISIBLE);
         String effectivePrompt = buildSingleAnswerPrompt(prompt, content);
@@ -560,7 +579,7 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private void processAiChunks(String prompt, List<String> chunks, int index, StringBuilder combinedResult,
-                                 TextView resultView, TextView progressView, String originalContent) {
+            TextView resultView, TextView progressView, String originalContent) {
         if (index >= chunks.size()) {
             runOnUiThread(() -> {
                 String finalResult = sanitizeAiRewriteResult(combinedResult.toString());
@@ -595,7 +614,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onTokenUsage(int totalTokenCount) {}
+            public void onTokenUsage(int totalTokenCount) {
+            }
 
             @Override
             public void onError(String error) {
@@ -747,12 +767,14 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     private void openChatBottomSheet() {
-        BottomSheetDialog dialog = new BottomSheetDialog(this, com.google.android.material.R.style.Theme_Material3_Light_BottomSheetDialog);
+        BottomSheetDialog dialog = new BottomSheetDialog(this,
+                com.google.android.material.R.style.Theme_Material3_Light_BottomSheetDialog);
         View sheetView = getLayoutInflater().inflate(R.layout.fragment_chat, null);
         dialog.setContentView(sheetView);
 
         FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-        if (bottomSheet != null) BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
+        if (bottomSheet != null)
+            BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
 
         RecyclerView rvMessages = sheetView.findViewById(R.id.rv_messages);
         EditText etInput = sheetView.findViewById(R.id.et_input);
@@ -766,29 +788,56 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
         btnSend.setOnClickListener(v -> {
             String input = etInput.getText().toString().trim();
-            if (input.isEmpty()) return;
+            if (input.isEmpty())
+                return;
             messageList.add(new ChatMessage("user", input));
             adapter.notifyItemInserted(messageList.size() - 1);
             rvMessages.scrollToPosition(messageList.size() - 1);
             etInput.setText("");
-            geminiService.processText("Chat", input, new GeminiService.GeminiCallback() {
-                @Override public void onSuccess(String result) {
+
+            // Show typing indicator and disable send
+            messageList.add(new ChatMessage("assistant", "Đang trả lời..."));
+            int typingIndex = messageList.size() - 1;
+            adapter.notifyItemInserted(typingIndex);
+            rvMessages.scrollToPosition(typingIndex);
+            btnSend.setEnabled(false);
+
+            String chatPrompt = "You are a helpful document editing assistant. " +
+                    "Keep responses concise and direct. " +
+                    "Reply in the same language the user uses.";
+            geminiService.processText(chatPrompt, input, new GeminiService.GeminiCallback() {
+                @Override
+                public void onSuccess(String result) {
                     runOnUiThread(() -> {
-                        messageList.add(new ChatMessage("assistant", result));
-                        adapter.notifyItemInserted(messageList.size() - 1);
-                        rvMessages.scrollToPosition(messageList.size() - 1);
+                        messageList.set(typingIndex, new ChatMessage("assistant", result));
+                        adapter.notifyItemChanged(typingIndex);
+                        rvMessages.scrollToPosition(typingIndex);
+                        btnSend.setEnabled(true);
                     });
                 }
-                @Override public void onTokenUsage(int t) {}
-                @Override public void onError(String e) {}
+
+                @Override
+                public void onTokenUsage(int t) {
+                }
+
+                @Override
+                public void onError(String e) {
+                    runOnUiThread(() -> {
+                        messageList.set(typingIndex, new ChatMessage("assistant", "Lỗi: " + e));
+                        adapter.notifyItemChanged(typingIndex);
+                        btnSend.setEnabled(true);
+                    });
+                }
             });
         });
         dialog.show();
     }
 
     /**
-     * Export the current editor content as a PDF file, then open a share/save chooser.
-     * Uses Android's PdfDocument API with StaticLayout for proper text wrapping and pagination.
+     * Export the current editor content as a PDF file, then open a share/save
+     * chooser.
+     * Uses Android's PdfDocument API with StaticLayout for proper text wrapping and
+     * pagination.
      */
     private void exportAsPdf() {
         String content = editor.getText().toString();
@@ -832,7 +881,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
             int pageNumber = 1;
 
             while (yOffset < totalHeight) {
-                PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
+                PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber)
+                        .create();
                 PdfDocument.Page page = pdfDocument.startPage(pageInfo);
                 Canvas canvas = page.getCanvas();
 
@@ -850,7 +900,8 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
             // Determine output file name
             String docName = "Document";
-            if (currentDocument != null && currentDocument.getFileName() != null && !currentDocument.getFileName().isEmpty()) {
+            if (currentDocument != null && currentDocument.getFileName() != null
+                    && !currentDocument.getFileName().isEmpty()) {
                 docName = currentDocument.getFileName().replaceAll("\\.[^.]+$", "");
             }
 
@@ -882,13 +933,15 @@ public class DocumentEditorActivity extends AppCompatActivity {
     }
 
     /**
-     * Download/copy the current document file to the device's public Downloads folder
+     * Download/copy the current document file to the device's public Downloads
+     * folder
      * so the user can find it in their file manager.
      * Uses MediaStore for Android 10+ and direct file copy for older versions.
      */
     private void downloadToStorage() {
         // First, make sure local file is saved with latest content
-        if (currentDocument == null || currentDocument.getLocalPath() == null || currentDocument.getLocalPath().isEmpty()) {
+        if (currentDocument == null || currentDocument.getLocalPath() == null
+                || currentDocument.getLocalPath().isEmpty()) {
             Toast.makeText(this, "Document path is unavailable.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -971,14 +1024,21 @@ public class DocumentEditorActivity extends AppCompatActivity {
      * Returns a MIME type string based on the file extension.
      */
     private String getMimeTypeForFile(String fileName) {
-        if (fileName == null) return "application/octet-stream";
+        if (fileName == null)
+            return "application/octet-stream";
         String lower = fileName.toLowerCase();
-        if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        if (lower.endsWith(".doc")) return "application/msword";
-        if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
-        if (lower.endsWith(".pdf")) return "application/pdf";
-        if (lower.endsWith(".txt")) return "text/plain";
+        if (lower.endsWith(".docx"))
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (lower.endsWith(".doc"))
+            return "application/msword";
+        if (lower.endsWith(".xlsx"))
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        if (lower.endsWith(".xls"))
+            return "application/vnd.ms-excel";
+        if (lower.endsWith(".pdf"))
+            return "application/pdf";
+        if (lower.endsWith(".txt"))
+            return "text/plain";
         return "application/octet-stream";
     }
 }

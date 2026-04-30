@@ -1,5 +1,7 @@
 package hcmute.edu.vn.documentfileeditor.Service;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.mlkit.common.model.DownloadConditions;
@@ -18,6 +20,9 @@ import java.util.Map;
 public class TranslateService {
 
     private static final String TAG = "TranslateService";
+    /** Only show "downloading model" if it takes longer than this (ms). */
+    private static final long MODEL_DOWNLOAD_TOAST_DELAY_MS = 500;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private Translator currentTranslator;
     private String currentSourceLang;
@@ -92,17 +97,24 @@ public class TranslateService {
         }
 
         // Download model if needed, then translate
+        // Only notify "downloading" if it actually takes time (model not cached).
         DownloadConditions conditions = new DownloadConditions.Builder().build();
-        callback.onModelDownloading();
+
+        Runnable downloadingNotification = callback::onModelDownloading;
+        mainHandler.postDelayed(downloadingNotification, MODEL_DOWNLOAD_TOAST_DELAY_MS);
 
         currentTranslator.downloadModelIfNeeded(conditions)
                 .addOnSuccessListener(unused -> {
+                    mainHandler.removeCallbacks(downloadingNotification);
                     Log.d(TAG, "Model ready: " + sourceLanguage + " → " + targetLanguage);
                     currentTranslator.translate(sourceText)
                             .addOnSuccessListener(callback::onSuccess)
                             .addOnFailureListener(e -> callback.onFailure("Lỗi dịch: " + e.getMessage()));
                 })
-                .addOnFailureListener(e -> callback.onFailure("Lỗi tải model ngôn ngữ: " + e.getMessage()));
+                .addOnFailureListener(e -> {
+                    mainHandler.removeCallbacks(downloadingNotification);
+                    callback.onFailure("Lỗi tải model ngôn ngữ: " + e.getMessage());
+                });
     }
 
     /**

@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -58,7 +59,7 @@ public class ScanActivity extends AppCompatActivity {
     private AuthService authService;
     private Bitmap currentBitmap;
 
-    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<PickVisualMediaRequest> galleryLauncher;
     private ActivityResultLauncher<Intent> docLauncher;
 
     @Override
@@ -96,13 +97,10 @@ public class ScanActivity extends AppCompatActivity {
 
     private void setupLaunchers() {
         galleryLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        Uri imageUri = result.getData().getData();
-                        if (imageUri != null) {
-                            showScannedImage(imageUri);
-                        }
+                new ActivityResultContracts.PickVisualMedia(),
+                uri -> {
+                    if (uri != null) {
+                        showScannedImage(uri);
                     }
                 }
         );
@@ -123,14 +121,16 @@ public class ScanActivity extends AppCompatActivity {
     private void setupListeners() {
         if (cardUploadGallery != null) {
             cardUploadGallery.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                galleryLauncher.launch(intent);
+                galleryLauncher.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build());
             });
         }
 
         if (cardUploadDocument != null) {
             cardUploadDocument.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 String[] mimeTypes = {
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

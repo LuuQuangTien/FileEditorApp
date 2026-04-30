@@ -28,7 +28,7 @@ public class GeminiService {
         if (raw != null && !raw.isEmpty()) {
             API_KEYS = raw.split(",");
         } else {
-            API_KEYS = new String[]{};
+            API_KEYS = new String[] {};
         }
     }
 
@@ -37,7 +37,8 @@ public class GeminiService {
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1/";
     private static final String DEFAULT_MODEL_PATH = "models/gemini-2.5-flash";
     private static final String PRIMARY_MODEL_PATH = DEFAULT_MODEL_PATH;
-    private static final String FALLBACK_MODEL_PATH = DEFAULT_MODEL_PATH;
+    private static final String FALLBACK_MODEL_PATH = "models/gemini-2.0-flash";
+    private static final String CHAT_MODEL_PATH = "models/gemini-2.0-flash";
     private static final int MAX_RETRIES = 3;
 
     // Free tier is sensitive to bursts, so keep a shared global gap between requests.
@@ -63,7 +64,9 @@ public class GeminiService {
 
     public interface GeminiCallback {
         void onSuccess(String result);
+
         void onTokenUsage(int totalTokenCount);
+
         void onError(String error);
     }
 
@@ -91,8 +94,16 @@ public class GeminiService {
         executeWithRetry(prompt, content, PRIMARY_MODEL_PATH, getNextApiKey(), 0, 0, callback);
     }
 
+    public void processChat(String prompt, String content, GeminiCallback callback) {
+        if (API_KEYS.length == 0) {
+            callback.onError("Chua cau hinh API key. Vui long them GEMINI_API_KEYS trong local.properties");
+            return;
+        }
+        executeWithRetry(prompt, content, CHAT_MODEL_PATH, getNextApiKey(), 0, 0, callback);
+    }
+
     private void executeWithRetry(String prompt, String content, String model, String apiKey,
-                                  int attempt, int keysTriedCount, GeminiCallback callback) {
+            int attempt, int keysTriedCount, GeminiCallback callback) {
         try {
             waitForAvailableRequestWindow();
 
@@ -110,8 +121,7 @@ public class GeminiService {
 
             RequestBody body = RequestBody.create(
                     jsonRequest.toString(),
-                    MediaType.get("application/json; charset=utf-8")
-            );
+                    MediaType.get("application/json; charset=utf-8"));
 
             String url = BASE_URL + model + ":generateContent?key=" + apiKey;
 
@@ -182,8 +192,8 @@ public class GeminiService {
     }
 
     private void handleErrorResponse(int code, String responseBody, String prompt, String content,
-                                     String model, String currentKey, int attempt, int keysTriedCount,
-                                     GeminiCallback callback, Response response) {
+            String model, String currentKey, int attempt, int keysTriedCount,
+            GeminiCallback callback, Response response) {
         Log.w(TAG, "Error " + code + ": " + responseBody);
 
         if (code == 429 || code == 503) {
@@ -254,9 +264,9 @@ public class GeminiService {
 
         if (lowerMessage.contains("token")
                 && (lowerMessage.contains("per minute")
-                || lowerMessage.contains("rate limit")
-                || lowerMessage.contains("quota")
-                || lowerMessage.contains("resource has been exhausted"))) {
+                        || lowerMessage.contains("rate limit")
+                        || lowerMessage.contains("quota")
+                        || lowerMessage.contains("resource has been exhausted"))) {
             return "API AI dang cham do free tier bi gioi han tan suat. Ung dung se tu gian nhip request, vui long thu lai sau it giay.";
         }
 
@@ -470,13 +480,13 @@ public class GeminiService {
     }
 
     private void retryWithDelay(String prompt, String content, String model, String apiKey,
-                                int attempt, int keysTriedCount, GeminiCallback callback) {
+            int attempt, int keysTriedCount, GeminiCallback callback) {
         long delayMs = (long) Math.pow(2, attempt + 1) * 1000;
         retryWithDelay(prompt, content, model, apiKey, attempt, keysTriedCount, callback, delayMs);
     }
 
     private void retryWithDelay(String prompt, String content, String model, String apiKey,
-                                int attempt, int keysTriedCount, GeminiCallback callback, long delayMs) {
+            int attempt, int keysTriedCount, GeminiCallback callback, long delayMs) {
         Log.d(TAG, "Retrying in " + delayMs + "ms...");
 
         new Thread(() -> {
