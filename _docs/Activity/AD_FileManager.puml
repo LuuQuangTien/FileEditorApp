@@ -1,0 +1,42 @@
+@startuml
+title Activity Diagram: File Management
+
+start
+:User accesses File List;
+:User chooses action;
+
+if (Upload) then (yes)
+  :Select File from Device;
+  :Upload file to Cloudinary;
+  if (Upload Success?) then (Yes)
+    :Save Metadata to Firestore Database;
+    :Refresh File List;
+  else (No)
+    :Show Upload Error;
+  endif
+elseif (Delete) then (yes)
+  :Select File to Delete;
+  :Delete File from Cloudinary;
+  if (Delete Success?) then (Yes)
+    :Delete Metadata from Firestore Database;
+    :Remove from File List;
+  else (No)
+    :Show Delete Error;
+  endif
+elseif (Create File/Folder) then (yes)
+  :User enters Name and Type (File/Folder);
+  if (Type == Folder) then (yes)
+    :Save Folder Metadata to Firestore Database;
+  else (File)
+    :Create Blank File/Template;
+    :Save File Metadata to Firestore Database;
+  endif
+  :Refresh File List;
+elseif (Search/Filter) then (yes)
+  :User enters keywords or Filters;
+  :Query Firestore Database with criteria;
+  :Update Document List with results;
+endif
+
+stop
+@enduml

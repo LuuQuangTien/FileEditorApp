@@ -1,0 +1,58 @@
+@startuml
+title Activity Diagram: Gemini AI Request Processing
+
+start
+:User initiates AI Request (Chat/Translate);
+:UI prepares Prompt and Content;
+:UI calls GeminiService;
+
+if (API Keys configured?) then (No)
+  :Return Error "Missing API Key";
+  :Show Error to User;
+  stop
+else (Yes)
+  :Select API Key & Model;
+endif
+
+repeat
+  :Wait for Request Window (Throttle);
+  :Send HTTP POST to Gemini API;
+  
+  if (Response HTTP 200?) then (Yes)
+    :Parse JSON response;
+    :Extract text and token usage;
+    :Return Success via Callback;
+    :UI updates display;
+    stop
+  else (No)
+    if (Error 429/503 - Rate Limit?) then (Yes)
+      :Parse Quota Status;
+      if (Daily Limit Exceeded?) then (Yes)
+        :Return Error "Daily Quota Exceeded";
+        stop
+      else (No/Per Minute)
+        :Calculate Retry Delay;
+        if (Max retries reached?) then (Yes)
+          if (Can switch API Key / Model?) then (Yes)
+            :Switch API Key / Fallback Model;
+          else (No)
+            :Return Error "Rate Limit Exceeded";
+            stop
+          endif
+        else (No)
+          :Wait for Delay;
+        endif
+      endif
+    else (Network or other Error)
+      if (Max retries reached?) then (Yes)
+        :Return Error to UI;
+        stop
+      else (No)
+        :Wait and Retry;
+      endif
+    endif
+  endif
+repeat while (Need to retry)
+
+stop
+@enduml

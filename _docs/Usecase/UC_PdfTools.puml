@@ -1,12 +1,12 @@
 @startuml
 left to right direction
 actor "User" as user
-actor "PdfConvert/CloudConvert Service" as pdf_service <<External System>>
+actor "CloudConvert API" as pdf_service <<External System>>
 actor "Local Storage" as local_storage <<Device>>
 
-package "PDF Tools Module" {
-  usecase "Convert File to PDF" as UC_ToPdf
-  usecase "Convert PDF to File" as UC_PdfTo
+package "PDF Tools" {
+  usecase "Convert File/Image to PDF" as UC_ToPdf
+  usecase "Convert PDF to Word/Excel" as UC_PdfTo
   usecase "Merge Multiple PDFs" as UC_Merge
   usecase "Split PDF" as UC_Split
   usecase "Annotate/Highlight PDF" as UC_Annotate

@@ -1,10 +1,10 @@
 @startuml
 left to right direction
 actor "User" as user
-actor "Firebase Database" as fb_db <<External System>>
+actor "Firestore Database" as fb_db <<External System>>
 actor "Cloudinary Storage" as cloudinary <<External System>>
 
-package "Document Management Module" {
+package "File Management" {
   usecase "View Document List" as UC_ViewList
   usecase "Search Documents" as UC_Search
   usecase "Filter/Sort Documents" as UC_Filter

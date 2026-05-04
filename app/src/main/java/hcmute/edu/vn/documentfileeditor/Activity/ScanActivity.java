@@ -35,10 +35,6 @@ import hcmute.edu.vn.documentfileeditor.R;
 import hcmute.edu.vn.documentfileeditor.Service.AuthService;
 import hcmute.edu.vn.documentfileeditor.Service.ScanService;
 
-/**
- * Image To PDF Activity — selects an image from gallery and saves it as an A4 PDF document.
- * Focused on document digitization (image → PDF).
- */
 public class ScanActivity extends AppCompatActivity {
 
     // Scan options
@@ -154,8 +150,6 @@ public class ScanActivity extends AppCompatActivity {
         }
     }
 
-    // ==================== Show Image ====================
-
     private void showScannedImage(Uri imageUri) {
         // Switch to result view
         if (scanOptionsSection != null) scanOptionsSection.setVisibility(View.GONE);
@@ -180,8 +174,6 @@ public class ScanActivity extends AppCompatActivity {
             Toast.makeText(this, "Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // ==================== Cloud Convert ====================
 
     private void startCloudConvert(Uri docUri) {
         String userId = authService.getCurrentUserId();
@@ -219,8 +211,6 @@ public class ScanActivity extends AppCompatActivity {
             }
         });
     }
-
-    // ==================== Save PDF & Sync with Repository ====================
 
     private void saveAsPdf() {
         if (currentBitmap == null) {
@@ -293,8 +283,6 @@ public class ScanActivity extends AppCompatActivity {
             }
         });
     }
-
-    // ==================== UI State ====================
 
     private void resetToScanOptions() {
         if (scanOptionsSection != null) scanOptionsSection.setVisibility(View.VISIBLE);

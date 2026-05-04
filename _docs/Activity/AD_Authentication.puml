@@ -1,0 +1,37 @@
+@startuml
+title Activity Diagram: Authentication (Login/Register)
+
+start
+:User opens App;
+if (Is User logged in?) then (Yes)
+  :Navigate to Main Screen;
+  stop
+else (No)
+  :Show Login Screen;
+endif
+
+repeat
+  :User chooses action;
+  if (Login with Google) then (yes)
+    :Call Google Sign-In API;
+    :Get Google Credentials;
+    :Authenticate with Firebase;
+  elseif (Login with Email) then (yes)
+    :User enters Email & Password;
+    :Call Firebase Login API;
+  elseif (Register) then (yes)
+    :User enters Email & Password;
+    :Call Firebase Register API;
+  endif
+
+  if (Authentication Success?) then (Yes)
+    :Save User Session;
+    :Navigate to Main Screen;
+    stop
+  else (No)
+    :Show Error Message;
+  endif
+repeat while (User tries again)
+
+stop
+@enduml

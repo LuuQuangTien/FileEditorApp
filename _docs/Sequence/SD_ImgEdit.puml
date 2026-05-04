@@ -1,0 +1,29 @@
+@startuml
+title Sequence Diagram: Image Editing
+actor User
+participant "UI (ImageEditorActivity)" as UI
+participant "Image Processing Engine (OpenCV/Bitmap)" as Engine
+participant "Local Storage" as Storage
+
+== Open Image ==
+User -> UI : Select Image
+UI -> Storage : Read image stream
+Storage --> UI : Bitmap data
+UI --> User : Render Image Preview
+
+== Edit Image (Filter/Rotate/Crop) ==
+User -> UI : Apply Filter / Rotate / Crop
+UI -> Engine : processImage(Bitmap, action, parameters)
+activate Engine
+Engine --> UI : Resulting Bitmap
+deactivate Engine
+UI --> User : Update Image Preview
+
+== Save Edited Image ==
+User -> UI : Click Save
+UI -> Engine : compress and encode Bitmap
+Engine --> UI : Byte Array
+UI -> Storage : write to file
+Storage --> UI : File URI / Success
+UI --> User : Show "Image Saved"
+@enduml

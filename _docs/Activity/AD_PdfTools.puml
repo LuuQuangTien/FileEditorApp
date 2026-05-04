@@ -1,0 +1,28 @@
+@startuml
+title Activity Diagram: PDF Tools Operations
+
+start
+:User opens PDF Tools;
+:Select PDF tool action;
+
+if (Action == Convert to PDF) then (yes)
+  :Select Word/Excel/Image file;
+  :Send file to CloudConvert API;
+  :Receive converted PDF;
+elseif (Action == Merge PDFs) then (yes)
+  :Select multiple PDF files;
+  :Combine PDF pages into single stream;
+elseif (Action == Split PDF) then (yes)
+  :Select PDF and split criteria;
+  :Extract pages to new PDF files;
+endif
+
+:Save resulting PDF(s) to Local Storage;
+if (Save Success?) then (Yes)
+  :Show result to User;
+else (No)
+  :Show Error;
+endif
+
+stop
+@enduml

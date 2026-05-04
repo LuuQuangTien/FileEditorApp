@@ -13,14 +13,9 @@ import com.google.mlkit.nl.translate.TranslatorOptions;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Service layer encapsulating translation business logic using Google ML Kit.
- * Decouples translation operations from Activity lifecycle.
- */
 public class TranslateService {
 
     private static final String TAG = "TranslateService";
-    /** Only show "downloading model" if it takes longer than this (ms). */
     private static final long MODEL_DOWNLOAD_TOAST_DELAY_MS = 500;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -28,10 +23,6 @@ public class TranslateService {
     private String currentSourceLang;
     private String currentTargetLang;
 
-    /**
-     * Ordered map of display name → ML Kit language code.
-     * Matches the languages supported by the text-recognition libraries in build.gradle.
-     */
     private static final Map<String, String> LANGUAGE_MAP = new LinkedHashMap<>();
 
     static {
@@ -45,22 +36,10 @@ public class TranslateService {
         LANGUAGE_MAP.put("German", TranslateLanguage.GERMAN);
     }
 
-    /**
-     * Returns the display names array for spinner adapters.
-     */
     public String[] getLanguageNames() {
         return LANGUAGE_MAP.keySet().toArray(new String[0]);
     }
 
-    /**
-     * Translates text from sourceLanguage to targetLanguage.
-     * Downloads the model if needed, then performs translation.
-     *
-     * @param sourceText     the text to translate
-     * @param sourceLanguage display name of the source language (e.g. "English")
-     * @param targetLanguage display name of the target language (e.g. "Vietnamese")
-     * @param callback       result callback
-     */
     public void translate(String sourceText, String sourceLanguage, String targetLanguage,
                           TranslateCallback callback) {
         if (sourceText == null || sourceText.trim().isEmpty()) {
@@ -81,7 +60,6 @@ public class TranslateService {
             return;
         }
 
-        // Reuse translator if same language pair, otherwise create new
         if (currentTranslator == null
                 || !sourceLangCode.equals(currentSourceLang)
                 || !targetLangCode.equals(currentTargetLang)) {
@@ -96,8 +74,6 @@ public class TranslateService {
             currentTargetLang = targetLangCode;
         }
 
-        // Download model if needed, then translate
-        // Only notify "downloading" if it actually takes time (model not cached).
         DownloadConditions conditions = new DownloadConditions.Builder().build();
 
         Runnable downloadingNotification = callback::onModelDownloading;
@@ -117,10 +93,6 @@ public class TranslateService {
                 });
     }
 
-    /**
-     * Closes the current translator to free resources.
-     * Should be called when the Activity is destroyed.
-     */
     public void closeTranslator() {
         if (currentTranslator != null) {
             currentTranslator.close();
@@ -130,17 +102,9 @@ public class TranslateService {
         }
     }
 
-    /**
-     * Callback interface for translation results.
-     */
     public interface TranslateCallback {
         void onSuccess(String translatedText);
         void onFailure(String errorMessage);
-
-        /**
-         * Called when starting to download a translation model.
-         * UI can show a loading indicator.
-         */
         default void onModelDownloading() {}
     }
 }

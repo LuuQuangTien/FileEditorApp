@@ -7,16 +7,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
-/**
- * Service layer encapsulating all authentication-related business logic.
- * Decouples UI (Activity/Fragment) from direct Firebase Auth dependency,
- * following the Dependency Inversion Principle.
- */
 public class AuthService {
-
-    /**
-     * Callback for authentication operations.
-     */
     public interface AuthCallback {
         void onSuccess();
         void onFailure(String errorMessage);
@@ -27,32 +18,17 @@ public class AuthService {
     public AuthService() {
         this.auth = FirebaseAuth.getInstance();
     }
-
-    /**
-     * Returns the currently signed-in user, or null if not signed in.
-     */
     public FirebaseUser getCurrentUser() {
         return auth.getCurrentUser();
     }
-
-    /**
-     * Returns whether there is a currently signed-in user.
-     */
     public boolean isSignedIn() {
         return auth.getCurrentUser() != null;
     }
 
-    /**
-     * Gets the current user's UID, or null if not signed in.
-     */
     public String getCurrentUserId() {
         FirebaseUser user = auth.getCurrentUser();
         return user != null ? user.getUid() : null;
     }
-
-    /**
-     * Signs in with email and password.
-     */
     public void login(String email, String password, AuthCallback callback) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -67,9 +43,6 @@ public class AuthService {
                 });
     }
 
-    /**
-     * Signs in with a Google ID token through Firebase Auth.
-     */
     public void loginWithGoogle(String idToken, AuthCallback callback) {
         auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
                 .addOnCompleteListener(task -> {
@@ -84,9 +57,6 @@ public class AuthService {
                 });
     }
 
-    /**
-     * Creates a new account with email, password, and display name.
-     */
     public void register(String name, String email, String password, AuthCallback callback) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -112,9 +82,6 @@ public class AuthService {
                 });
     }
 
-    /**
-     * Sends a password reset email.
-     */
     public void sendPasswordReset(String email, AuthCallback callback) {
         auth.sendPasswordResetEmail(email)
                 .addOnCompleteListener(task -> {
@@ -129,23 +96,14 @@ public class AuthService {
                 });
     }
 
-    /**
-     * Signs out the current user.
-     */
     public void signOut() {
         auth.signOut();
     }
 
-    /**
-     * Validates an email address format.
-     */
     public boolean isValidEmail(String email) {
         return email != null && Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
-    /**
-     * Validates that a password meets minimum length requirements.
-     */
     public boolean isValidPassword(String password) {
         return password != null && password.length() >= 6;
     }

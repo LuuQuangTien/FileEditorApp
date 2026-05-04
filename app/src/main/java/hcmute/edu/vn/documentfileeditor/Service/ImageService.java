@@ -19,25 +19,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-/**
- * Service layer encapsulating image processing business logic.
- * Decouples image transformation algorithms from Activity lifecycle,
- * making them testable and reusable.
- */
 public class ImageService {
-
     private static final String TAG = "ImageService";
-
-    /**
-     * Applies color filters (brightness, contrast, saturation) and a base filter matrix to a bitmap.
-     *
-     * @param original        the original bitmap
-     * @param baseFilterMatrix the base color matrix (e.g. sepia, B&W, vintage)
-     * @param brightness      brightness percentage (100 = normal)
-     * @param contrast        contrast percentage (100 = normal)
-     * @param saturation      saturation percentage (100 = normal)
-     * @return a new bitmap with filters applied
-     */
     public Bitmap applyFilters(Bitmap original, ColorMatrix baseFilterMatrix,
                                float brightness, float contrast, float saturation) {
         if (original == null) return null;
@@ -70,16 +53,6 @@ public class ImageService {
 
         return bmp;
     }
-
-    /**
-     * Applies rotation and flip transformations to a bitmap.
-     *
-     * @param original  the original bitmap
-     * @param rotation  rotation angle in degrees
-     * @param flipH     whether to flip horizontally
-     * @param flipV     whether to flip vertically
-     * @return a new bitmap with transformations applied
-     */
     public Bitmap applyTransformations(Bitmap original, float rotation, boolean flipH, boolean flipV) {
         if (original == null) return null;
 
@@ -97,12 +70,6 @@ public class ImageService {
         );
     }
 
-    /**
-     * Applies a simulated enhancement filter (brightness/contrast boost).
-     *
-     * @param original the original bitmap
-     * @return a new bitmap with enhancement applied
-     */
     public Bitmap applyEnhancement(Bitmap original) {
         if (original == null) return null;
 
@@ -114,14 +81,6 @@ public class ImageService {
         return bmp;
     }
 
-    /**
-     * Crops a bitmap to the specified width and height, centered.
-     *
-     * @param original    the original bitmap
-     * @param targetWidth desired width in pixels
-     * @param targetHeight desired height in pixels
-     * @return a new cropped bitmap
-     */
     public Bitmap cropBitmap(Bitmap original, int targetWidth, int targetHeight) {
         if (original == null) return null;
 
@@ -139,15 +98,6 @@ public class ImageService {
         return Bitmap.createBitmap(original, x, y, cropW, cropH);
     }
 
-    /**
-     * Saves a bitmap to the device's Pictures gallery using MediaStore (Android 10+)
-     * or direct file write (Android 9 and below).
-     *
-     * @param context  application context
-     * @param bitmap   the bitmap to save
-     * @param fileName desired file name (without extension)
-     * @return the saved file Uri, or null if failed
-     */
     public Uri saveBitmapToGallery(Context context, Bitmap bitmap, String fileName) {
         if (bitmap == null || context == null) return null;
 

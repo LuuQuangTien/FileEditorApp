@@ -42,11 +42,6 @@ import hcmute.edu.vn.documentfileeditor.R;
 import hcmute.edu.vn.documentfileeditor.Service.ScanService;
 import hcmute.edu.vn.documentfileeditor.Service.TranslateService;
 
-/**
- * OCR Scanner Activity — extracts text from images and provides multi-language translation.
- * Input: Camera capture or Gallery pick.
- * Output: Editable extracted text with copy & translate features.
- */
 public class OcrActivity extends AppCompatActivity {
 
     private static final int REQUEST_CAMERA_PERMISSION = 101;
@@ -208,8 +203,6 @@ public class OcrActivity extends AppCompatActivity {
         }
     }
 
-    // ==================== Camera ====================
-
     private void checkCameraPermissionAndCapture() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -261,8 +254,6 @@ public class OcrActivity extends AppCompatActivity {
         }
     }
 
-    // ==================== Process Image (OCR) ====================
-
     private void processImage(Uri imageUri) {
         // Show result section with processing
         showResultSection();
@@ -291,8 +282,6 @@ public class OcrActivity extends AppCompatActivity {
             }
         });
     }
-
-    // ==================== Translation ====================
 
     private void performTranslation() {
         String sourceText = etExtractedText != null ? etExtractedText.getText().toString().trim() : "";
@@ -341,8 +330,6 @@ public class OcrActivity extends AppCompatActivity {
             progressTranslateOcr.setVisibility(translating ? View.VISIBLE : View.GONE);
         }
     }
-
-    // ==================== UI State ====================
 
     private void showResultSection() {
         if (ocrInputSection != null) ocrInputSection.setVisibility(View.GONE);

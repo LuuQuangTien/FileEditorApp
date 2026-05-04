@@ -1,0 +1,56 @@
+@startuml
+title Sequence Diagram: Authentication (Login & Register)
+actor User
+participant "UI (LoginActivity/RegisterActivity)" as UI
+participant "AuthService" as ViewModel
+participant "FirebaseAuth" as Auth
+participant "Google SignIn API" as Google
+
+== Register ==
+User -> UI : Enter Email & Password, click Register
+UI -> ViewModel : register(email, password)
+ViewModel -> Auth : createUserWithEmailAndPassword()
+activate Auth
+Auth --> ViewModel : AuthResult (Success/Failure)
+deactivate Auth
+ViewModel --> UI : Update State (Success/Error)
+UI --> User : Show message / Navigate to Login
+
+== Login with Email ==
+User -> UI : Enter Email & Password, click Login
+UI -> ViewModel : login(email, password)
+ViewModel -> Auth : signInWithEmailAndPassword()
+activate Auth
+Auth --> ViewModel : AuthResult
+deactivate Auth
+ViewModel --> UI : Update State
+UI --> User : Navigate to Home / Show Error
+
+== Login with Google ==
+User -> UI : Click Login with Google
+UI -> Google : request SignIn Intent
+activate Google
+Google --> UI : return Intent
+deactivate Google
+UI -> User : Show Google Account Picker
+User --> UI : Select Account
+UI -> Google : getSignedInAccount()
+activate Google
+Google --> UI : return idToken
+deactivate Google
+UI -> ViewModel : loginWithGoogle(idToken)
+ViewModel -> Auth : signInWithCredential(credential)
+activate Auth
+Auth --> ViewModel : AuthResult
+deactivate Auth
+ViewModel --> UI : Update State
+UI --> User : Navigate to Home / Show Error
+
+== Logout ==
+User -> UI : Click Logout
+UI -> ViewModel : logout()
+ViewModel -> Auth : signOut()
+Auth --> ViewModel : Success
+ViewModel --> UI : Clear Session
+UI --> User : Navigate to Login Screen
+@enduml

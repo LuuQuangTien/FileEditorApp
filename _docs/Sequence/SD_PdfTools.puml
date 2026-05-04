@@ -1,0 +1,35 @@
+@startuml
+title Sequence Diagram: PDF Tools Operations
+actor User
+participant "UI (MergePdfActivity/SplitPdfActivity/PdfConvertActivity)" as UI
+participant "PdfService" as Service
+participant "CloudConvertService" as CloudConvert
+participant "Local Storage" as Storage
+
+== Merge PDFs ==
+User -> UI : Select multiple PDFs, click Merge
+UI -> Service : mergePdfs(uriList)
+activate Service
+Service -> Storage : read input PDFs
+Storage --> Service : PDF streams
+Service -> Service : combine pages
+Service -> Storage : save merged PDF
+Storage --> Service : new PDF URI
+Service --> UI : Success
+deactivate Service
+UI --> User : Show merged file
+
+== Convert Document to PDF ==
+User -> UI : Select Doc/Image, click Convert
+UI -> Service : convertToPdf(uri)
+activate Service
+Service -> CloudConvert : send file and format
+activate CloudConvert
+CloudConvert --> Service : Return generated PDF stream
+deactivate CloudConvert
+Service -> Storage : save PDF
+Storage --> Service : new PDF URI
+Service --> UI : Success
+deactivate Service
+UI --> User : Show converted file
+@enduml

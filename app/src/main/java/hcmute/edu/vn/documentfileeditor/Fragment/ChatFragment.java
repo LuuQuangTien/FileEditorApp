@@ -22,10 +22,6 @@ import hcmute.edu.vn.documentfileeditor.Adapter.ChatAdapter;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.ChatMessage;
 import hcmute.edu.vn.documentfileeditor.R;
 
-/**
- * Fragment for the AI chat assistant.
- * Now uses extracted ChatMessage model and ChatAdapter instead of inner classes.
- */
 public class ChatFragment extends Fragment {
 
     private RecyclerView rvMessages;

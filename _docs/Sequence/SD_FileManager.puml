@@ -1,0 +1,102 @@
+@startuml
+title Sequence Diagram: Document Management
+actor User
+participant "UI (DocumentsFragment)" as UI
+participant "DocumentRepository" as Repository
+participant "Local Storage / DB" as Local
+participant "CloudinaryStorageService" as Storage
+participant "Firestore Database" as DB
+participant "SharedPreferences (Local)" as Prefs
+
+== Upload Document ==
+User -> UI : Select File & Click Import
+UI -> Repository : uploadDocument(uri, documentMeta)
+
+Repository -> Local : saveFile + save metadata
+activate Local
+Local --> Repository : Local path + saved
+deactivate Local
+
+Repository --> UI : Return new Document
+UI --> User : Update List UI & Show "Upload Success"
+
+group Background Sync
+    Repository -> Storage : uploadDocument(file)
+    activate Storage
+    Storage --> Repository : Return File URL
+    deactivate Storage
+
+    Repository -> DB : Save metadata
+    activate DB
+    DB --> Repository : Success
+    deactivate DB
+end
+
+== Delete Document ==
+User -> UI : Click Delete on Document
+UI -> Repository : deleteDocument(document)
+
+Repository -> DB : delete document metadata
+activate DB
+DB --> Repository : Success
+deactivate DB
+
+Repository -> Local : delete local DB + file
+activate Local
+Local --> Repository : Success
+deactivate Local
+
+Repository --> UI : Remove item from List
+UI --> User : Show "Delete Success"
+
+== Create File/Folder ==
+User -> UI : Enter Name & Type (File/Folder)
+alt Type == Folder
+    UI -> Prefs : saveFolder(folderName)
+    activate Prefs
+    Prefs --> UI : Success
+    deactivate Prefs
+else Type == File
+    UI -> Repository : createDocument(documentMeta)
+
+    Repository -> Local : create file + save metadata
+    activate Local
+    Local --> Repository : Local path + saved
+    deactivate Local
+
+    Repository --> UI : Return new Document
+
+    group Background Sync (if file has content)
+        Repository -> Storage : uploadDocument(file)
+        activate Storage
+        Storage --> Repository : Return File URL
+        deactivate Storage
+
+        Repository -> DB : Save metadata
+        activate DB
+        DB --> Repository : Success
+        deactivate DB
+    end
+end
+UI --> User : Update List UI & Show Success
+
+== Search/Filter ==
+User -> UI : Enter Search keyword / Filter criteria
+UI -> Repository : getDocuments()
+
+Repository --> UI : Return cached documents
+
+Repository -> Local : Load local documents
+activate Local
+Local --> Repository : Local documents
+deactivate Local
+Repository --> UI : Return local documents
+
+Repository -> DB : Fetch remote documents
+activate DB
+DB --> Repository : Remote documents
+deactivate DB
+
+Repository --> UI : Return merged documents
+UI --> User : Display matched documents
+@enduml

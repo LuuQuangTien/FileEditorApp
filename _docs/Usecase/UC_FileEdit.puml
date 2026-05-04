@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Local File System" as lfs <<System>>
+actor "Gemini AI" as gemini <<External System>>
+
+package "Document Editing" {
+  usecase "Open Document (Word/Excel)" as UC_Open
+  usecase "Edit Word Content" as UC_EditText
+  usecase "Format Text" as UC_Format
+  usecase "Edit Excel Spreadsheet" as UC_EditCell
+  usecase "Save Changes" as UC_Save
+  usecase "Export to PDF" as UC_ExportPdf
+  
+  usecase "Chat with AI Assistant" as UC_ChatAI
+  usecase "Translate Text" as UC_Translate
+  usecase "Summarize/Improve Text" as UC_AIAssist
+}
+
+user --> UC_Open
+user --> UC_EditText
+user --> UC_Format
+user --> UC_EditCell
+user --> UC_Save
+user --> UC_ExportPdf
+
+user --> UC_ChatAI
+user --> UC_Translate
+user --> UC_AIAssist
+
+UC_Open --> lfs
+UC_Save --> lfs
+
+UC_ChatAI --> gemini
+UC_Translate --> gemini
+UC_AIAssist --> gemini
+
+UC_EditText ..> UC_Save : <<include>>
+UC_EditCell ..> UC_Save : <<include>>
+
+UC_Translate .> UC_EditText : <<extend>>
+UC_AIAssist .> UC_EditText : <<extend>>
+@enduml

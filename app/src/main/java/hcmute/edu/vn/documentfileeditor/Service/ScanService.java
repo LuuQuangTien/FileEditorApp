@@ -17,10 +17,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-/**
- * Service layer encapsulating document scanning business logic.
- * Handles OCR text extraction and PDF generation from scanned images.
- */
 public class ScanService {
 
     private static final String TAG = "ScanService";
@@ -37,9 +33,6 @@ public class ScanService {
         latinRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
     }
 
-    /**
-     * Returns a TextRecognizer for the specified script.
-     */
     private TextRecognizer getRecognizer(int scriptType) {
         switch (scriptType) {
             case SCRIPT_CHINESE:
@@ -59,14 +52,6 @@ public class ScanService {
         }
     }
 
-    /**
-     * Extracts text from an image URI using ML Kit OCR.
-     *
-     * @param context    application context
-     * @param imageUri   the URI of the image to process
-     * @param scriptType one of SCRIPT_LATIN, SCRIPT_CHINESE, SCRIPT_JAPANESE
-     * @param callback   result callback
-     */
     public void extractText(Context context, Uri imageUri, int scriptType, OcrCallback callback) {
         try {
             InputImage image = InputImage.fromFilePath(context, imageUri);
@@ -91,14 +76,6 @@ public class ScanService {
         }
     }
 
-    /**
-     * Saves a bitmap as a PDF file.
-     *
-     * @param context  application context
-     * @param bitmap   the scanned image bitmap
-     * @param fileName the desired file name (without extension)
-     * @param callback result callback
-     */
     public void saveAsPdf(Context context, Bitmap bitmap, String fileName, SaveCallback callback) {
         if (bitmap == null) {
             callback.onFailure("Không có ảnh để lưu");
@@ -163,26 +140,17 @@ public class ScanService {
         }
     }
 
-    /**
-     * Closes all recognizers to free resources.
-     */
     public void close() {
         if (latinRecognizer != null) latinRecognizer.close();
         if (chineseRecognizer != null) chineseRecognizer.close();
         if (japaneseRecognizer != null) japaneseRecognizer.close();
     }
 
-    /**
-     * Callback for OCR text extraction results.
-     */
     public interface OcrCallback {
         void onSuccess(String extractedText);
         void onFailure(String errorMessage);
     }
 
-    /**
-     * Callback for PDF save results.
-     */
     public interface SaveCallback {
         void onSuccess(String filePath);
         void onFailure(String errorMessage);

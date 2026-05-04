@@ -1,0 +1,43 @@
+@startuml
+title Sequence Diagram: Gemini AI Features (Chat, Translate, Summarize)
+actor User
+participant "UI (Activity/Fragment)" as UI
+participant "GeminiService" as Service
+participant "Google Gemini API" as API
+
+User -> UI : Request AI Feature (Chat/Translate/Summarize)
+UI -> UI : Extract text/prompt
+UI -> Service : processChat(prompt, content) / processText(...)
+activate Service
+
+Service -> Service : Check API Key availability
+alt API Key missing
+    Service --> UI : onError("Missing API Key")
+    UI --> User : Show Error Message
+else API Key exists
+    Service -> Service : Check rate limit (Throttle lock)
+    Service -> API : HTTP POST generateContent
+    activate API
+    
+    alt Success Response (200)
+        API --> Service : JSON Response (Candidates)
+        Service -> Service : Parse Result & Token Usage
+        Service --> UI : onSuccess(result) + onTokenUsage(tokens)
+        UI --> User : Display AI Response
+    else Rate Limit Exceeded (429/503)
+        API --> Service : Error (Quota Exceeded)
+        Service -> Service : Calculate Retry Delay / Switch Model/Key
+        Service -> API : Retry Request
+        API --> Service : JSON Response
+        Service --> UI : onSuccess / onError
+        UI --> User : Display Result/Error
+    else Network Error
+        API --> Service : Timeout / Disconnect
+        deactivate API
+        Service -> Service : Retry (Max 3 attempts)
+        Service --> UI : onError("Network Error")
+        deactivate Service
+        UI --> User : Show Error Message
+    end
+end
+@enduml

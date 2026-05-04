@@ -19,10 +19,6 @@ import hcmute.edu.vn.documentfileeditor.R;
 import hcmute.edu.vn.documentfileeditor.Service.DocumentService;
 import hcmute.edu.vn.documentfileeditor.Util.FileTypeHelper;
 
-/**
- * RecyclerView Adapter for displaying live documents from the repository.
- * Uses FileTypeHelper and DocumentService to eliminate duplicate logic.
- */
 public class LiveDocumentAdapter extends RecyclerView.Adapter<LiveDocumentAdapter.DocumentViewHolder> {
     public interface OnDocumentClickListener {
         void onDocumentClick(DocumentFB document);

@@ -26,9 +26,6 @@ public class PdfService {
         void onFailure(String error);
     }
 
-    /**
-     * Merge multiple PDFs into one rasterized PDF.
-     */
     public void mergePdfs(Context context, List<Uri> pdfUris, String outputFileName, PdfCallback callback) {
         new Thread(() -> {
             try {
@@ -90,10 +87,6 @@ public class PdfService {
         }).start();
     }
 
-    /**
-     * Split PDF by a comma-separated range string (e.g. "1,3,5-7").
-     * Pages are 1-indexed.
-     */
     public void splitPdf(Context context, Uri pdfUri, String rangeStr, String outputFileName, PdfCallback callback) {
         new Thread(() -> {
             try {
@@ -180,9 +173,6 @@ public class PdfService {
         }).start();
     }
 
-    /**
-     * Re-renders original PDF with annotations and saves it.
-     */
     public void saveAnnotatedPdf(Context context, Uri pdfUri, Map<Integer, List<PdfAnnotationView.Annotation>> annotations, String outputFileName, PdfCallback callback) {
         new Thread(() -> {
             try {

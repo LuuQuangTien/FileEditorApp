@@ -1,0 +1,103 @@
+@startuml
+left to right direction
+actor "User" as user
+
+' External Systems
+actor "Firebase Authentication" as fb_auth <<External System>>
+actor "Firestore Database" as fb_db <<External System>>
+actor "Cloudinary Storage" as cloudinary <<External System>>
+actor "Gemini AI" as gemini <<External System>>
+actor "Google ML Kit" as ml_kit <<External System>>
+actor "CloudConvert API" as cloudconvert <<External System>>
+
+package "Authentication" {
+  usecase "Login (Email/Google)" as UC_Login
+  usecase "Register" as UC_Register
+}
+
+package "File Management" {
+  usecase "View Document List" as UC_ViewList
+  usecase "Search/Filter Documents" as UC_SearchFilter
+  usecase "Upload/Backup to Cloud" as UC_Upload
+  usecase "Download from Cloud" as UC_Download
+  usecase "Delete File" as UC_Delete
+}
+
+package "Document Tools" {
+  usecase "Scan Document" as UC_Scan
+  usecase "Extract Text (OCR)" as UC_OCR
+  usecase "Translate Text" as UC_Translate
+}
+
+package "Image Editing" {
+  usecase "Filter Image" as UC_Filter
+  usecase "Rotate Image" as UC_Rotate
+  usecase "Crop Image" as UC_Crop
+  usecase "Enhance Image" as UC_Enhance
+}
+
+package "Document Editing" {
+  usecase "Edit Word Document" as UC_EditDoc
+  usecase "Edit Excel Spreadsheet" as UC_EditExcel
+  usecase "Chat with AI Assistant" as UC_ChatAI
+  usecase "Summarize/Improve Text" as UC_AIAssist
+}
+
+package "PDF Tools" {
+  usecase "Convert to/from PDF" as UC_ConvertPdf
+  usecase "Merge Multiple PDFs" as UC_MergePdf
+  usecase "Split PDF" as UC_SplitPdf
+  usecase "Annotate/Highlight PDF" as UC_AnnotatePdf
+}
+
+' User interactions
+user --> UC_Login
+user --> UC_Register
+
+user --> UC_ViewList
+user --> UC_SearchFilter
+user --> UC_Upload
+user --> UC_Download
+user --> UC_Delete
+
+user --> UC_Scan
+user --> UC_OCR
+user --> UC_Translate
+
+user --> UC_Filter
+user --> UC_Rotate
+user --> UC_Crop
+user --> UC_Enhance
+
+user --> UC_EditDoc
+user --> UC_EditExcel
+user --> UC_ChatAI
+user --> UC_AIAssist
+
+user --> UC_ConvertPdf
+user --> UC_MergePdf
+user --> UC_SplitPdf
+user --> UC_AnnotatePdf
+
+' System interactions
+UC_Login --> fb_auth : "Xác thực user"
+UC_Register --> fb_auth : "Tạo account"
+
+UC_Upload --> cloudinary : "Lưu trữ file"
+UC_Upload --> fb_db : "Lưu metadata"
+UC_Download --> cloudinary : "Tải file dữ liệu"
+UC_ViewList --> fb_db : "Lấy danh sách"
+UC_Delete --> cloudinary : "Xóa file"
+UC_Delete --> fb_db : "Xóa metadata"
+
+UC_OCR --> ml_kit : "Nhận diện chữ"
+UC_Translate --> ml_kit : "Dịch văn bản"
+UC_Translate --> gemini : "Dịch nâng cao"
+
+UC_ChatAI --> gemini : "Hỏi đáp AI"
+UC_AIAssist --> gemini : "Tóm tắt/Sửa lỗi"
+
+UC_ConvertPdf --> cloudconvert : "Chuyển đổi định dạng"
+
+@enduml
+

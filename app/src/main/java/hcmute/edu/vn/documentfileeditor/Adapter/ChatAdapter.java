@@ -15,10 +15,6 @@ import java.util.List;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.ChatMessage;
 import hcmute.edu.vn.documentfileeditor.R;
 
-/**
- * RecyclerView Adapter for displaying chat messages between user and AI assistant.
- * Shared by both ChatFragment and DocumentEditorActivity's chat bottom sheet.
- */
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
 
     private final List<ChatMessage> messages;

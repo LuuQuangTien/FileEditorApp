@@ -1,8 +1,5 @@
 package hcmute.edu.vn.documentfileeditor.Model.Entity;
 
-/**
- * Represents the data and formula of a spreadsheet cell.
- */
 public class CellData {
     private String value;
     private String formula;

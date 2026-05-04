@@ -1,8 +1,5 @@
 package hcmute.edu.vn.documentfileeditor.Model.Entity;
 
-/**
- * Represents the visual style properties of a spreadsheet cell.
- */
 public class CellStyle {
     private boolean bold;
     private boolean italic;

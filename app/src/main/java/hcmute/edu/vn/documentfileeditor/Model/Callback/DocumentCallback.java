@@ -4,10 +4,6 @@ import java.util.List;
 
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 
-/**
- * Callback interfaces for asynchronous document operations.
- * Separated from DAO package to follow proper layered architecture.
- */
 public interface DocumentCallback {
 
     interface UploadCallback {

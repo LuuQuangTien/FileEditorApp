@@ -1,0 +1,24 @@
+@startuml
+title Activity Diagram: Image Editing
+
+start
+:User opens an Image;
+:Load Image Bitmap;
+:Render Image Preview;
+
+repeat
+  :User selects Edit Tool (Crop, Rotate, Filter);
+  :Apply changes to Bitmap via OpenCV;
+  :Update Image Preview;
+repeat while (User makes more edits)
+
+if (User clicks Save?) then (Yes)
+  :Compress and Encode Bitmap;
+  :Save Image to Local Storage;
+  :Show "Saved Successfully";
+else (User discards)
+  :Discard changes;
+endif
+
+stop
+@enduml

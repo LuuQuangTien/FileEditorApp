@@ -16,10 +16,6 @@ import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Service.CloudinaryStorageService;
 
-/**
- * Remote data source that stores binary file content on Cloudinary
- * and document metadata on Firestore.
- */
 public class FirestoreDocumentRepository {
     private static final String COLLECTION_PATH = "User_Documents";
     private static final String TAG = "FirestoreDocRepo";

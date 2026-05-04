@@ -8,11 +8,6 @@ import java.util.List;
 import hcmute.edu.vn.documentfileeditor.Model.Callback.DocumentCallback;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 
-/**
- * Interface defining the contract for document repository operations.
- * Follows the Dependency Inversion Principle (DIP) - high-level modules
- * depend on this abstraction rather than concrete implementations.
- */
 public interface IDocumentRepository {
 
     void uploadDocument(Context context, Uri sourceUri, DocumentFB documentMeta,

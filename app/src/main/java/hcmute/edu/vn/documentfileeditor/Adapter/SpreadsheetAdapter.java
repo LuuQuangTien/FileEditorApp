@@ -15,14 +15,7 @@ import hcmute.edu.vn.documentfileeditor.Model.Entity.CellData;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.CellStyle;
 import hcmute.edu.vn.documentfileeditor.R;
 
-/**
- * RecyclerView Adapter for the spreadsheet grid in ExcelEditorActivity.
- */
 public class SpreadsheetAdapter extends RecyclerView.Adapter<SpreadsheetAdapter.CellViewHolder> {
-
-    /**
-     * Listener for cell click events.
-     */
     public interface OnCellClickListener {
         void onCellClick(String cellKey);
     }

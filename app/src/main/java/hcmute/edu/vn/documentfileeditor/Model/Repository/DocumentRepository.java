@@ -27,10 +27,6 @@ import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 import hcmute.edu.vn.documentfileeditor.Model.Mapper.DocumentMapper;
 import hcmute.edu.vn.documentfileeditor.Model.Storage.LocalDocumentStorage;
 
-/**
- * Concrete implementation of IDocumentRepository.
- * Orchestrates data flow between local (Room + file storage) and remote (Firestore + Firebase Storage).
- */
 public class DocumentRepository implements IDocumentRepository {
     private static final String TAG = "DocumentRepository";
     private static volatile DocumentRepository instance;

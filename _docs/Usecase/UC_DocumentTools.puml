@@ -2,10 +2,10 @@
 left to right direction
 actor "User" as user
 actor "Camera Device" as camera <<Device>>
-actor "ML Kit / Cloud Vision" as ml_api <<External System>>
-actor "Translation API / Gemini API" as trans_api <<External System>>
+actor "Google ML Kit" as ml_api <<External System>>
+actor "Gemini AI" as trans_api <<External System>>
 
-package "Document Tools Module" {
+package "Document Tools" {
   usecase "Scan Document" as UC_Scan
   usecase "Auto-detect Document Edges" as UC_DetectEdge
   usecase "Extract Text (OCR)" as UC_OCR

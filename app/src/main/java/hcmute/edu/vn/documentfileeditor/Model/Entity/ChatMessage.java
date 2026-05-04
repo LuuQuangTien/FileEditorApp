@@ -1,8 +1,5 @@
 package hcmute.edu.vn.documentfileeditor.Model.Entity;
 
-/**
- * Represents a single chat message in the AI assistant conversation.
- */
 public class ChatMessage {
     private String role;
     private String content;

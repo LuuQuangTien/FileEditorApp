@@ -17,17 +17,7 @@ import java.util.Locale;
 import hcmute.edu.vn.documentfileeditor.Enum.FileType;
 import hcmute.edu.vn.documentfileeditor.Model.Entity.DocumentFB;
 
-/**
- * Service layer encapsulating document-related business logic.
- * Eliminates duplicate code across DocumentEditorActivity, ExcelEditorActivity,
- * DocumentsFragment, HomeFragment, and LiveDocumentAdapter.
- */
 public class DocumentService {
-
-    /**
-     * Reads text content from a local file path.
-     * Previously duplicated in DocumentEditorActivity and ExcelEditorActivity.
-     */
     public String readTextFromLocalFile(Context context, String localPath) {
         if (localPath == null || localPath.isEmpty()) {
             return null;
@@ -53,10 +43,6 @@ public class DocumentService {
         }
     }
 
-    /**
-     * Saves text content to a local file.
-     * Returns true if successful, false otherwise.
-     */
     public boolean saveTextToLocalFile(String localPath, String content) {
         if (localPath == null || localPath.isEmpty()) {
             return false;
@@ -71,10 +57,6 @@ public class DocumentService {
         }
     }
 
-    /**
-     * Builds a display-ready file name with proper extension.
-     * Previously in DocumentsFragment.
-     */
     public String buildFileName(String rawName, FileType fileType) {
         String trimmed = rawName == null ? "" : rawName.trim();
         if (trimmed.isEmpty()) {
@@ -89,10 +71,6 @@ public class DocumentService {
         return trimmed;
     }
 
-    /**
-     * Resolves the file name from a content URI.
-     * Previously in DocumentsFragment.
-     */
     public String resolveFileName(Context context, Uri uri) {
         Cursor cursor = context.getContentResolver().query(
                 uri,
@@ -119,10 +97,6 @@ public class DocumentService {
         return "Imported file " + System.currentTimeMillis();
     }
 
-    /**
-     * Resolves the FileType from file name and MIME type.
-     * Previously in DocumentsFragment.
-     */
     public FileType resolveFileType(String fileName, String mimeType) {
         String lowerName = fileName == null ? "" : fileName.toLowerCase(Locale.US);
         String lowerMimeType = mimeType == null ? "" : mimeType.toLowerCase(Locale.US);
@@ -142,10 +116,6 @@ public class DocumentService {
         return FileType.OTHER;
     }
 
-    /**
-     * Builds metadata string for display (type | date | sync status).
-     * Previously duplicated in HomeFragment and LiveDocumentAdapter.
-     */
     public String buildMeta(DocumentFB document) {
         String typeText = hcmute.edu.vn.documentfileeditor.Util.FileTypeHelper.getTypeLabel(document.getFileType());
         String dateText = document.getLastModified() > 0L
@@ -157,10 +127,6 @@ public class DocumentService {
         return typeText + " | " + dateText + " | " + syncText;
     }
 
-    /**
-     * Formats a file size in bytes to a human-readable string.
-     * Previously in LiveDocumentAdapter.
-     */
     public String formatFileSize(long sizeBytes) {
         if (sizeBytes <= 0) {
             return "Unknown size";

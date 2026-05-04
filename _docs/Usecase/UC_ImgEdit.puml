@@ -2,7 +2,7 @@
 left to right direction
 actor "User" as user
 
-package "Image Editing Module" {
+package "Image Editing" {
   usecase "Open Image" as UC_OpenImage
   usecase "Apply Filter" as UC_Filter
   usecase "Rotate Image" as UC_Rotate

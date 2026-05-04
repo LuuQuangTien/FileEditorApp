@@ -1,0 +1,30 @@
+@startuml
+title Activity Diagram: Core Document Operations (Open, Edit, Save)
+
+start
+:User selects a document to open;
+:Read file stream from Local Storage;
+:Parse Document (Word/Excel format);
+
+if (Parsing Success?) then (Yes)
+  :Render Document on UI;
+  
+  repeat
+    :User makes edits (text, formatting);
+    :Update Internal Document Model;
+    :Refresh UI View;
+  repeat while (User continues editing)
+  
+  if (User clicks Save?) then (Yes)
+    :Generate File Output Stream;
+    :Write changes to Local Storage;
+    :Show "Save Success";
+  else (No)
+  endif
+  
+else (No)
+  :Show "Failed to open document" error;
+endif
+
+stop
+@enduml
