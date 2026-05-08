@@ -1,35 +1,148 @@
 @startuml
 title Sequence Diagram: PDF Tools Operations
 actor User
-participant "UI (MergePdfActivity/SplitPdfActivity/PdfConvertActivity)" as UI
-participant "PdfService" as Service
+participant "UI (MergePdfActivity/\nSplitPdfActivity/\nPdfConvertActivity/\nAnnotatePdfActivity)" as UI
+participant "AuthService" as Auth
+participant "PdfService" as PdfSvc
 participant "CloudConvertService" as CloudConvert
+participant "DocumentRepository" as Repo
 participant "Local Storage" as Storage
+participant "CloudinaryStorageService" as Cloudinary
+participant "Firestore Database" as DB
 
 == Merge PDFs ==
-User -> UI : Select multiple PDFs, click Merge
-UI -> Service : mergePdfs(uriList)
-activate Service
-Service -> Storage : read input PDFs
-Storage --> Service : PDF streams
-Service -> Service : combine pages
-Service -> Storage : save merged PDF
-Storage --> Service : new PDF URI
-Service --> UI : Success
-deactivate Service
-UI --> User : Show merged file
+User -> UI : Select multiple PDFs, enter output name, click Merge
+UI -> Auth : getCurrentUserId()
+Auth --> UI : userId
 
-== Convert Document to PDF ==
-User -> UI : Select Doc/Image, click Convert
-UI -> Service : convertToPdf(uri)
-activate Service
-Service -> CloudConvert : send file and format
+UI -> PdfSvc : mergePdfs(uriList, outputName, callback)
+activate PdfSvc
+loop for each PDF URI
+    PdfSvc -> Storage : openFileDescriptor(uri)
+    Storage --> PdfSvc : ParcelFileDescriptor
+    PdfSvc -> PdfSvc : PdfRenderer → render pages to Bitmap
+end
+PdfSvc -> PdfSvc : Combine all pages into PdfDocument
+PdfSvc -> Storage : save merged PDF to local file
+Storage --> PdfSvc : local file path
+PdfSvc --> UI : onSuccess(localPath)
+deactivate PdfSvc
+
+UI -> Repo : uploadDocument(fileUri, documentMeta)
+activate Repo
+Repo -> Storage : save file locally + metadata
+Repo --> UI : Return new Document
+UI --> User : Show "Merge Success"
+
+group Background Sync
+    Repo -> Cloudinary : upload file
+    Cloudinary --> Repo : file URL
+    Repo -> DB : save metadata
+    DB --> Repo : Success
+end
+deactivate Repo
+
+== Split PDF ==
+User -> UI : Select PDF, enter page range, click Split
+UI -> Auth : getCurrentUserId()
+Auth --> UI : userId
+
+UI -> PdfSvc : splitPdf(uri, rangeStr, outputName, callback)
+activate PdfSvc
+PdfSvc -> Storage : openFileDescriptor(uri)
+Storage --> PdfSvc : ParcelFileDescriptor
+PdfSvc -> PdfSvc : PdfRenderer → parse range string
+PdfSvc -> PdfSvc : Extract selected pages to new PdfDocument
+PdfSvc -> Storage : save split PDF to local file
+Storage --> PdfSvc : local file path
+PdfSvc --> UI : onSuccess(localPath)
+deactivate PdfSvc
+
+UI -> Repo : uploadDocument(fileUri, documentMeta)
+activate Repo
+Repo -> Repo : save metadata
+Repo --> UI : Return new Document
+UI --> User : Show "Split Success"
+
+group Background Sync
+    Repo -> Cloudinary : upload file
+    Cloudinary --> Repo : file URL
+    Repo -> DB : save metadata
+    DB --> Repo : Success
+end
+deactivate Repo
+
+== Convert PDF to Word/Excel ==
+User -> UI : Select PDF, choose target format (docx/xlsx), click Convert
+UI -> Auth : getCurrentUserId()
+Auth --> UI : userId
+
+UI -> CloudConvert : convertDocument(uri, outputName, targetFormat, callback)
 activate CloudConvert
-CloudConvert --> Service : Return generated PDF stream
+CloudConvert -> CloudConvert : createJob(outputFormat)
+CloudConvert --> UI : onProgress("1/4. Creating job...")
+
+CloudConvert -> CloudConvert : uploadFile(url, params, tempFile)
+CloudConvert --> UI : onProgress("2/4. Uploading file...")
+
+CloudConvert -> CloudConvert : pollJobUntilFinished(jobId)
+CloudConvert --> UI : onProgress("3/4. Converting...")
+
+CloudConvert -> Storage : download converted file
+Storage --> CloudConvert : saved local file
+CloudConvert --> UI : onProgress("4/4. Downloading...")
+CloudConvert --> UI : onSuccess(localPath)
 deactivate CloudConvert
-Service -> Storage : save PDF
-Storage --> Service : new PDF URI
-Service --> UI : Success
-deactivate Service
-UI --> User : Show converted file
+
+UI -> Repo : uploadDocument(fileUri, documentMeta)
+activate Repo
+Repo -> Storage : save file locally + metadata
+Repo --> UI : Return new Document
+UI --> User : Show "Convert Success"
+
+group Background Sync
+    Repo -> Cloudinary : upload file
+    Cloudinary --> Repo : file URL
+    Repo -> DB : save metadata
+    DB --> Repo : Success
+end
+deactivate Repo
+
+== Annotate/Highlight PDF ==
+User -> UI : Select PDF to annotate
+UI -> UI : loadPdf() → PdfRenderer → render pages
+UI --> User : Display PDF pages with annotation toolbar
+
+User -> UI : Draw highlights / add text annotations
+UI -> UI : PdfAnnotationView records annotations per page
+
+User -> UI : Enter output name, click Save
+UI -> Auth : getCurrentUserId()
+Auth --> UI : userId
+
+UI -> PdfSvc : saveAnnotatedPdf(uri, annotations, outputName, callback)
+activate PdfSvc
+PdfSvc -> Storage : openFileDescriptor(uri)
+Storage --> PdfSvc : ParcelFileDescriptor
+PdfSvc -> PdfSvc : PdfRenderer → render each page to Bitmap
+PdfSvc -> PdfSvc : Draw highlight rects & text annotations on Canvas
+PdfSvc -> PdfSvc : Write annotated bitmaps to new PdfDocument
+PdfSvc -> Storage : save annotated PDF to local file
+Storage --> PdfSvc : local file path
+PdfSvc --> UI : onSuccess(localPath)
+deactivate PdfSvc
+
+UI -> Repo : uploadDocument(fileUri, documentMeta)
+activate Repo
+Repo -> Storage : save file locally + metadata
+Repo --> UI : Return new Document
+UI --> User : Show "Annotate Save Success"
+
+group Background Sync
+    Repo -> Cloudinary : upload file
+    Cloudinary --> Repo : file URL
+    Repo -> DB : save metadata
+    DB --> Repo : Success
+end
+deactivate Repo
 @enduml

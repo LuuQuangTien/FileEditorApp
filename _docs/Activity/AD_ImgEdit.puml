@@ -1,23 +1,50 @@
 @startuml
-title Activity Diagram: Image Editing
+title Activity Diagram: Image Editing Operations
 
 start
-:User opens an Image;
-:Load Image Bitmap;
-:Render Image Preview;
 
-repeat
-  :User selects Edit Tool (Crop, Rotate, Filter);
-  :Apply changes to Bitmap via OpenCV;
-  :Update Image Preview;
-repeat while (User makes more edits)
+:User selects Image Tool;
 
-if (User clicks Save?) then (Yes)
-  :Compress and Encode Bitmap;
-  :Save Image to Local Storage;
-  :Show "Saved Successfully";
-else (User discards)
-  :Discard changes;
+:Open corresponding Activity;
+:Launch PhotoPicker;
+:Select image from gallery;
+:Load Bitmap and display preview;
+
+switch (Editing Tool)
+
+case (Crop)
+  :Adjust aspect ratio and size;
+  :ImageService.cropBitmap();
+
+case (Rotate / Flip)
+  :Rotate or flip image;
+  :ImageService.applyTransformations();
+
+case (Filters)
+  :Select filter preset;
+  :Adjust brightness/contrast/saturation;
+  :ImageService.applyFilters();
+
+case (Enhance)
+  :Show processing overlay;
+  :ImageService.applyEnhancement();
+  :Display enhanced result;
+
+endswitch
+
+:Update image preview;
+
+if (Save image?) then (Yes)
+  :ImageService.saveBitmapToGallery();
+  :Save PNG using MediaStore API;
+  :Show success message;
+
+elseif (Reset image?) then (Reset)
+  :Restore original image;
+
+else (Exit)
+  :Close Activity;
+
 endif
 
 stop

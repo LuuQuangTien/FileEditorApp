@@ -1,0 +1,45 @@
+@startuml
+title Activity Diagram: OCR & Document Scanner
+
+start
+
+if (Feature?) then (Scan Image)
+  :Open gallery;
+  :Select image;
+  :Preview image;
+  :Call saveAsPdf();
+
+  :Upload to Cloudinary;
+  :Save metadata to Firestore;
+
+elseif (Upload Document)
+  :Open document picker;
+  :Select doc/xls/txt;
+  :Convert via CloudConvert;
+  :Upload PDF;
+  :Save metadata;
+
+else (OCR)
+  :Open camera or gallery;
+  :Get image;
+
+  :Call extractText();
+
+  if (Text found?) then (Yes)
+    :Display text;
+
+    if (Action?) then (Translate)
+      :Call TranslateService;
+      :Display translated text;
+    else (Copy)
+      :Copy to clipboard;
+    endif
+
+  else (No)
+    :Show error;
+  endif
+
+endif
+
+stop
+@enduml

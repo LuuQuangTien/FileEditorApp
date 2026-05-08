@@ -1,29 +1,99 @@
 @startuml
-title Sequence Diagram: Image Editing
+title Sequence Diagram: Image Editing Operations
+
 actor User
-participant "UI (ImageEditorActivity)" as UI
-participant "Image Processing Engine (OpenCV/Bitmap)" as Engine
-participant "Local Storage" as Storage
+participant "ToolsFragment" as Tools
+participant "CropImageActivity" as CropUI
+participant "RotateImageActivity" as RotateUI
+participant "ImageFilterActivity" as FilterUI
+participant "EnhanceImageActivity" as EnhanceUI
+participant "ImageService" as Service
+participant "Android PhotoPicker" as Picker
+participant "MediaStore API" as MediaStore
 
-== Open Image ==
-User -> UI : Select Image
-UI -> Storage : Read image stream
-Storage --> UI : Bitmap data
-UI --> User : Render Image Preview
+== Select Editing Tool ==
+User -> Tools : Select Image Tool
 
-== Edit Image (Filter/Rotate/Crop) ==
-User -> UI : Apply Filter / Rotate / Crop
-UI -> Engine : processImage(Bitmap, action, parameters)
-activate Engine
-Engine --> UI : Resulting Bitmap
-deactivate Engine
-UI --> User : Update Image Preview
+alt Crop Image
+    Tools -> CropUI : startActivity()
+else Rotate / Flip Image
+    Tools -> RotateUI : startActivity()
+else Apply Filters
+    Tools -> FilterUI : startActivity()
+else Enhance Image
+    Tools -> EnhanceUI : startActivity()
+end
+
+== Open Image from Gallery ==
+note over CropUI, EnhanceUI
+Mỗi Activity tự động mở PhotoPicker khi chạy
+end note
+
+User -> Picker : PickVisualMedia(ImageOnly)
+Picker --> User : Select image
+Picker --> CurrentActivity : Return image Uri
+
+CropUI -> CropUI : openInputStream(uri)
+CropUI -> CropUI : BitmapFactory.decodeStream()
+CropUI --> User : Display image preview
+
+== Crop Image ==
+User -> CropUI : Select aspect ratio
+User -> CropUI : Adjust width/height sliders
+User -> CropUI : Click Apply
+
+CropUI -> Service : cropBitmap(bitmap, targetW, targetH)
+activate Service
+Service --> CropUI : Cropped Bitmap
+deactivate Service
+
+CropUI --> User : Update image preview
+
+== Rotate / Flip Image ==
+User -> RotateUI : Rotate or flip image
+
+RotateUI -> Service : applyTransformations(bitmap,\nrotation, flipH, flipV)
+activate Service
+Service --> RotateUI : Transformed Bitmap
+deactivate Service
+
+RotateUI --> User : Update image preview
+
+== Apply Filters ==
+User -> FilterUI : Select filter preset
+User -> FilterUI : Adjust brightness/contrast/saturation
+
+FilterUI -> Service : applyFilters(bitmap,\ncolorMatrix, brightness,\ncontrast, saturation)
+activate Service
+Service --> FilterUI : Filtered Bitmap
+deactivate Service
+
+FilterUI --> User : Update image preview
+
+== Enhance Image ==
+User -> EnhanceUI : Select enhancement option
+
+EnhanceUI --> User : Show processing overlay
+
+EnhanceUI -> Service : applyEnhancement(bitmap)
+activate Service
+Service --> EnhanceUI : Enhanced Bitmap
+deactivate Service
+
+EnhanceUI --> User : Show enhanced result
 
 == Save Edited Image ==
-User -> UI : Click Save
-UI -> Engine : compress and encode Bitmap
-Engine --> UI : Byte Array
-UI -> Storage : write to file
-Storage --> UI : File URI / Success
-UI --> User : Show "Image Saved"
+User -> CropUI : Click Save
+
+CurrentActivity -> Service : saveBitmapToGallery(context,\nbitmap, fileName)
+activate Service
+
+Service -> MediaStore : Insert image + compress PNG
+MediaStore --> Service : Saved image Uri
+
+Service --> CropUI : Return saved Uri
+deactivate Service
+
+CropUI --> User : Show success message
+
 @enduml

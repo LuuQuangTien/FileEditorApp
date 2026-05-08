@@ -23,15 +23,18 @@ package "File Management" {
   usecase "Delete File" as UC_Delete
 }
 
-package "Document Tools" {
+package "OCR & Document Scanner" {
   usecase "Scan Document" as UC_Scan
   usecase "Extract Text (OCR)" as UC_OCR
+}
+
+package "Translate" {
   usecase "Translate Text" as UC_Translate
 }
 
 package "Image Editing" {
   usecase "Filter Image" as UC_Filter
-  usecase "Rotate Image" as UC_Rotate
+  usecase "Rotate / Flip Image" as UC_Rotate
   usecase "Crop Image" as UC_Crop
   usecase "Enhance Image" as UC_Enhance
 }

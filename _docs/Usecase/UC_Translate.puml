@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Google ML Kit (Translation)" as ml_translate <<External System>>
+
+package "Translate" {
+  usecase "Translate Text" as UC_Translate
+  usecase "Select Source/Target Language" as UC_SelectLang
+  usecase "Swap Languages" as UC_SwapLang
+  usecase "Copy Translation" as UC_CopyTranslation
+  usecase "Download Translation (.txt)" as UC_DownloadTxt
+}
+
+user --> UC_Translate
+user --> UC_CopyTranslation
+user --> UC_DownloadTxt
+
+UC_Translate ..> UC_SelectLang : <<include>>
+UC_SelectLang ..> UC_SwapLang : <<extend>>
+
+UC_Translate --> ml_translate : "Download model & translate"
+@enduml

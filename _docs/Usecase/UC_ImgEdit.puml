@@ -1,25 +1,34 @@
 @startuml
 left to right direction
-actor "User" as user
+actor "User" as User
 
 package "Image Editing" {
-  usecase "Open Image" as UC_OpenImage
-  usecase "Apply Filter" as UC_Filter
-  usecase "Rotate Image" as UC_Rotate
+
+  usecase "Open Image\nfrom Gallery" as UC_Open
   usecase "Crop Image" as UC_Crop
+  usecase "Rotate / Flip Image" as UC_Rotate
+  usecase "Apply Filters" as UC_Filter
+  usecase "Adjust Filter Parameters\n(Brightness, Contrast,\nSaturation)" as UC_Adjust
   usecase "Enhance Image" as UC_Enhance
   usecase "Save Edited Image" as UC_Save
+
 }
 
-user --> UC_OpenImage
-user --> UC_Filter
-user --> UC_Rotate
-user --> UC_Crop
-user --> UC_Enhance
-user --> UC_Save
+User --> UC_Crop
+User --> UC_Rotate
+User --> UC_Filter
+User --> UC_Enhance
 
-UC_Filter ..> UC_Save : <<include>>
-UC_Rotate ..> UC_Save : <<include>>
+UC_Crop ..> UC_Open : <<include>>
+UC_Rotate ..> UC_Open : <<include>>
+UC_Filter ..> UC_Open : <<include>>
+UC_Enhance ..> UC_Open : <<include>>
+
+UC_Filter ..> UC_Adjust : <<include>>
+
 UC_Crop ..> UC_Save : <<include>>
+UC_Rotate ..> UC_Save : <<include>>
+UC_Filter ..> UC_Save : <<include>>
 UC_Enhance ..> UC_Save : <<include>>
+
 @enduml

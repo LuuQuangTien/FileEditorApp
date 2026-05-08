@@ -131,7 +131,6 @@ public class CloudConvertService {
         });
     }
 
-    // Keep the old method for backwards compatibility
     public void convertDocumentToPdf(Context context, Uri docUri, String outputFileName,
             CloudConvertCallback callback) {
         convertDocument(context, docUri, outputFileName, "pdf", callback);

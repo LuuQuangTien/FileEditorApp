@@ -5,23 +5,127 @@ start
 :User opens PDF Tools;
 :Select PDF tool action;
 
-if (Action == Convert to PDF) then (yes)
-  :Select Word/Excel/Image file;
-  :Send file to CloudConvert API;
-  :Receive converted PDF;
-elseif (Action == Merge PDFs) then (yes)
+if (Merge PDFs)
   :Select multiple PDF files;
-  :Combine PDF pages into single stream;
-elseif (Action == Split PDF) then (yes)
-  :Select PDF and split criteria;
-  :Extract pages to new PDF files;
-endif
+  :Arrange PDF order (drag & drop);
+  :Enter output file name;
+  :Click Merge;
 
-:Save resulting PDF(s) to Local Storage;
-if (Save Success?) then (Yes)
-  :Show result to User;
-else (No)
-  :Show Error;
+  :AuthService checks login;
+  if (Logged in?) then (Yes)
+    :PdfService.mergePdfs();
+    :Read each PDF via PdfRenderer;
+    :Render pages to Bitmap, combine into PdfDocument;
+    :Save merged PDF to Local Storage;
+    if (Merge Success?) then (Yes)
+      :DocumentRepository.uploadDocument();
+      :Show "Merge Success" to User;
+      fork
+        :Background: Upload to Cloudinary;
+        :Background: Save metadata to Firestore;
+      fork again
+        :User returns to Tools screen;
+      end fork
+    else (No)
+      :Show Merge Error;
+    endif
+  else (No)
+    :Show "Login Required" Error;
+  endif
+
+elseif (Split PDF)
+  :Select a PDF file;
+  :Preview PDF info (filename, total pages);
+  :Enter page range (e.g. "1-3,5");
+  :Enter output file name;
+  :Click Split;
+
+  :AuthService checks login;
+  if (Logged in?) then (Yes)
+    :PdfService.splitPdf();
+    :Parse range string;
+    :Extract selected pages via PdfRenderer;
+    :Build new PdfDocument with selected pages;
+    :Save split PDF to Local Storage;
+    if (Split Success?) then (Yes)
+      :DocumentRepository.uploadDocument();
+      :Show "Split Success" to User;
+      fork
+        :Background: Upload to Cloudinary;
+        :Background: Save metadata to Firestore;
+      fork again
+        :User returns to Tools screen;
+      end fork
+    else (No)
+      :Show Split Error;
+    endif
+  else (No)
+    :Show "Login Required" Error;
+  endif
+
+elseif (Convert PDF to Word/Excel)
+  :Select target format (DOCX or XLSX);
+  :Select a PDF file;
+  :Preview selected file info;
+  :Click Convert;
+
+  :AuthService checks login;
+  if (Logged in?) then (Yes)
+    :CloudConvertService.convertDocument();
+    :Step 1/4: Create job on CloudConvert API;
+    :Step 2/4: Upload file to cloud;
+    :Step 3/4: Poll job status until finished;
+    :Step 4/4: Download converted file to local;
+    if (Convert Success?) then (Yes)
+      :DocumentRepository.uploadDocument();
+      :Show "Convert Success" to User;
+      fork
+        :Background: Upload to Cloudinary;
+        :Background: Save metadata to Firestore;
+      fork again
+        :User returns to Tools screen;
+      end fork
+    else (No)
+      :Show Convert Error;
+    endif
+  else (No)
+    :Show "Login Required" Error;
+  endif
+
+elseif (Annotate/Highlight PDF)
+  :Select a PDF file;
+  :Load PDF via PdfRenderer;
+  :Display pages with PdfAnnotationView;
+
+  :User selects annotation tool (Highlight / Text);
+  :User draws annotations on pages;
+  :User navigates pages (prev/next);
+  :Enter output file name;
+  :Click Save;
+
+  :AuthService checks login;
+  if (Logged in?) then (Yes)
+    :PdfService.saveAnnotatedPdf();
+    :Render each page to Bitmap;
+    :Draw annotations (rects & text) on Canvas;
+    :Build new PdfDocument with annotated pages;
+    :Save annotated PDF to Local Storage;
+    if (Save Success?) then (Yes)
+      :DocumentRepository.uploadDocument();
+      :Show "Annotate Save Success" to User;
+      fork
+        :Background: Upload to Cloudinary;
+        :Background: Save metadata to Firestore;
+      fork again
+        :User returns to Tools screen;
+      end fork
+    else (No)
+      :Show Save Error;
+    endif
+  else (No)
+    :Show "Login Required" Error;
+  endif
+
 endif
 
 stop

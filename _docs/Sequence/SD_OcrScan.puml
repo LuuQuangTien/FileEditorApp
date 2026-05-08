@@ -1,0 +1,79 @@
+@startuml
+title Sequence Diagram: OCR & Document Scanner
+
+actor User
+participant "ScanActivity" as ScanUI
+participant "OcrActivity" as OcrUI
+participant "Camera/Gallery" as Media
+participant "ScanService" as ScanSvc
+participant "TranslateService" as TransSvc
+participant "CloudConvertService" as CloudConvert
+participant "DocumentRepository" as DocRepo
+participant "Cloudinary" as Cloud
+participant "Firestore" as DB
+
+== Scan Image → PDF ==
+
+User -> ScanUI : Upload image (gallery)
+ScanUI -> Media : Open picker
+Media --> ScanUI : Image URI
+
+ScanUI -> ScanUI : Decode bitmap
+ScanUI -> ScanSvc : saveAsPdf(bitmap)
+activate ScanSvc
+ScanSvc --> ScanUI : PDF path
+deactivate ScanSvc
+
+ScanUI -> DocRepo : uploadDocument(fileUri)
+activate DocRepo
+DocRepo -> Cloud : Upload file
+Cloud --> DocRepo : URL
+DocRepo -> DB : Save metadata
+DB --> DocRepo : OK
+DocRepo --> ScanUI
+deactivate DocRepo
+
+ScanUI --> User : "Saved"
+
+== Upload Document → Convert PDF ==
+
+User -> ScanUI : Upload doc/xls/txt
+ScanUI -> Media : Open document picker
+Media --> ScanUI : Document URI
+
+ScanUI -> CloudConvert : convertDocumentToPdf()
+activate CloudConvert
+CloudConvert --> ScanUI : PDF path
+deactivate CloudConvert
+
+ScanUI -> DocRepo : uploadDocument()
+DocRepo -> Cloud
+DocRepo -> DB
+DocRepo --> ScanUI
+
+== OCR ==
+
+User -> OcrUI : Take photo / Upload
+OcrUI -> Media
+Media --> OcrUI : Image URI
+
+OcrUI -> ScanSvc : extractText()
+activate ScanSvc
+ScanSvc --> OcrUI : Extracted text (async)
+deactivate ScanSvc
+
+OcrUI --> User : Display text
+
+opt Translate
+  User -> OcrUI : Click Translate
+  OcrUI -> TransSvc : translate(text)
+  TransSvc --> OcrUI : translated text
+  OcrUI --> User : Show result
+end
+
+opt Copy
+  User -> OcrUI : Copy
+  OcrUI -> OcrUI : Clipboard
+end
+
+@enduml

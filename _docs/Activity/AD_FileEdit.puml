@@ -3,25 +3,30 @@ title Activity Diagram: Core Document Operations (Open, Edit, Save)
 
 start
 :User selects a document to open;
-:Read file stream from Local Storage;
-:Parse Document (Word/Excel format);
+:Read file from Local Storage;
 
-if (Parsing Success?) then (Yes)
+if (File read success?) then (Yes)
+  :Load content to UI;
+
+  if (File type is Excel?) then (Yes)
+    :Parse sheet data (loadSheetData);
+  endif
+
   :Render Document on UI;
-  
+
   repeat
     :User makes edits (text, formatting);
-    :Update Internal Document Model;
+    :Update UI data (text / sheetData);
     :Refresh UI View;
   repeat while (User continues editing)
-  
+
   if (User clicks Save?) then (Yes)
-    :Generate File Output Stream;
-    :Write changes to Local Storage;
+    :Save content to Local Storage (DocumentService);
+    :Sync document (DocumentRepository);
     :Show "Save Success";
   else (No)
   endif
-  
+
 else (No)
   :Show "Failed to open document" error;
 endif

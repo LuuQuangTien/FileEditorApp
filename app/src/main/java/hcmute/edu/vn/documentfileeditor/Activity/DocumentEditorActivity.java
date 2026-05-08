@@ -233,14 +233,12 @@ public class DocumentEditorActivity extends AppCompatActivity {
             if (active) {
                 text.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             } else {
-                // Remove matching StyleSpans in the selection range
                 StyleSpan[] spans = text.getSpans(start, end, StyleSpan.class);
                 for (StyleSpan span : spans) {
                     if (span.getStyle() == style) {
                         int spanStart = text.getSpanStart(span);
                         int spanEnd = text.getSpanEnd(span);
                         text.removeSpan(span);
-                        // Re-apply span to portions outside the selection
                         if (spanStart < start) {
                             text.setSpan(new StyleSpan(style), spanStart, start, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         }
@@ -292,7 +290,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
 
     private void shareDocumentContent() {
         try {
-            // Ensure local file is saved with latest content
             ensureLocalPath();
             if (currentDocument.getLocalPath() != null && !currentDocument.getLocalPath().isEmpty()) {
                 documentService.saveTextToLocalFile(currentDocument.getLocalPath(), editor.getText().toString());
@@ -327,7 +324,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
             InputStream is = getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(is);
 
-            // Resize bitmap to fit screen width roughly
             int width = editor.getWidth() - editor.getPaddingLeft() - editor.getPaddingRight();
             if (width <= 0)
                 width = 800;
@@ -337,7 +333,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
             ImageSpan span = new ImageSpan(this, scaled);
             int start = editor.getSelectionStart();
 
-            // We use a dummy space character to hold the image span
             editor.getText().insert(start, "\n ");
             editor.getText().setSpan(span, start + 1, start + 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             editor.getText().insert(start + 2, "\n");
@@ -365,33 +360,26 @@ public class DocumentEditorActivity extends AppCompatActivity {
             currentDocument.setFileType(FileType.WORD);
         }
 
-        // Ensure we always have a file name
         if (currentDocument.getFileName() == null || currentDocument.getFileName().isEmpty()) {
             currentDocument.setFileName("Document.docx");
         }
         tvTitle.setText(currentDocument.getFileName());
 
-        // Ensure we always have a valid local path
         ensureLocalPath();
 
         String content = documentService.readTextFromLocalFile(this, currentDocument.getLocalPath());
         editor.setText(content == null || content.isEmpty() ? "" : content);
     }
 
-    /**
-     * Ensures that currentDocument has a valid local file path.
-     * If localPath is null/empty or the file doesn't exist, creates a new local file in the app's documents directory.
-     */
     private void ensureLocalPath() {
         if (currentDocument == null)
             return;
 
         String localPath = currentDocument.getLocalPath();
         if (localPath != null && !localPath.isEmpty() && new File(localPath).exists()) {
-            return; // Local path is valid and file exists
+            return;
         }
 
-        // Create a local file in the documents directory
         String fileName = currentDocument.getFileName();
         if (fileName == null || fileName.isEmpty()) {
             fileName = "Document.docx";
@@ -404,7 +392,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
         File localFile = new File(docDir, fileName);
 
-        // If file doesn't exist yet, create an empty one
         if (!localFile.exists()) {
             try {
                 localFile.createNewFile();
@@ -833,12 +820,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    /**
-     * Export the current editor content as a PDF file, then open a share/save
-     * chooser.
-     * Uses Android's PdfDocument API with StaticLayout for proper text wrapping and
-     * pagination.
-     */
     private void exportAsPdf() {
         String content = editor.getText().toString();
         if (content.trim().isEmpty()) {
@@ -932,21 +913,13 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Download/copy the current document file to the device's public Downloads
-     * folder
-     * so the user can find it in their file manager.
-     * Uses MediaStore for Android 10+ and direct file copy for older versions.
-     */
     private void downloadToStorage() {
-        // First, make sure local file is saved with latest content
         if (currentDocument == null || currentDocument.getLocalPath() == null
                 || currentDocument.getLocalPath().isEmpty()) {
             Toast.makeText(this, "Document path is unavailable.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Save current editor content to local file first
         if (!documentService.saveTextToLocalFile(currentDocument.getLocalPath(), editor.getText().toString())) {
             Toast.makeText(this, "Could not save local file.", Toast.LENGTH_SHORT).show();
             return;
@@ -1020,9 +993,6 @@ public class DocumentEditorActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Returns a MIME type string based on the file extension.
-     */
     private String getMimeTypeForFile(String fileName) {
         if (fileName == null)
             return "application/octet-stream";

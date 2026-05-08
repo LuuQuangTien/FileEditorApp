@@ -1,38 +1,63 @@
 @startuml
 title Sequence Diagram: Core Document Operations (Open, Edit, Save)
+
 actor User
 participant "UI (DocumentEditorActivity/ExcelEditorActivity)" as UI
+participant "DocumentService" as Service
+participant "DocumentRepository" as Repo
 participant "Local File System" as LFS
-participant "Document Processing Engine" as Engine
+participant "Cloudinary Storage" as Cloud
+participant "Firestore Database" as DB
 
 == Open Document ==
 User -> UI : Select File
-UI -> LFS : Read file URI
-activate LFS
-LFS --> UI : File Stream
-deactivate LFS
-UI -> Engine : Parse Document (Word/Excel)
-activate Engine
-Engine --> UI : Document Model
-deactivate Engine
+UI -> Service : readTextFromLocalFile(path)
+activate Service
+Service -> LFS : Open InputStream
+LFS --> Service : File Data
+Service --> UI : Text Content
+deactivate Service
+UI -> UI : (Excel only) loadSheetData()
 UI --> User : Render Document
 
 == Edit Document ==
-User -> UI : Type text / format / edit cell
-UI -> Engine : Update Document Model
-Engine --> UI : Acknowledge Update
+User -> UI : Type / Format / Edit Cell
+UI -> UI : Update text / sheetData
 UI --> User : Update UI View
 
 == Save Document ==
 User -> UI : Click "Save"
-UI -> Engine : Generate File Output Stream
-activate Engine
-Engine --> UI : Byte Stream
-deactivate Engine
-UI -> LFS : Write to file URI
-activate LFS
-LFS --> UI : Success Confirmation
-deactivate LFS
+
+UI -> Service : saveTextToLocalFile(path, content)
+activate Service
+Service -> LFS : Write file
+LFS --> Service : Success
+Service --> UI : Result
+deactivate Service
+
+UI -> Repo : saveDocument(document)
+
+activate Repo
+Repo -> Repo : completeNewUpload()
+
+alt Cloud sync available
+    Repo -> Cloud : uploadDocument(file)
+    activate Cloud
+    Cloud --> Repo : File URL
+    deactivate Cloud
+
+    Repo -> DB : save metadata
+    activate DB
+    DB --> Repo : Success
+    deactivate DB
+
+    Repo --> UI : UploadCallback.onSuccess()
+else No network / failure
+    Repo --> UI : UploadCallback.onSuccess() (local only)
+end
+
+deactivate Repo
+
 UI --> User : Show "Saved Successfully"
 
 @enduml

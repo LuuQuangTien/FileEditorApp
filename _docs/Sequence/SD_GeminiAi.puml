@@ -1,5 +1,5 @@
 @startuml
-title Sequence Diagram: Gemini AI Features (Chat, Translate, Summarize)
+title Sequence Diagram: Gemini AI Features
 actor User
 participant "UI (Activity/Fragment)" as UI
 participant "GeminiService" as Service
@@ -24,6 +24,7 @@ else API Key exists
         Service -> Service : Parse Result & Token Usage
         Service --> UI : onSuccess(result) + onTokenUsage(tokens)
         UI --> User : Display AI Response
+        UI -> UI : Apply result to editor content
     else Rate Limit Exceeded (429/503)
         API --> Service : Error (Quota Exceeded)
         Service -> Service : Calculate Retry Delay / Switch Model/Key

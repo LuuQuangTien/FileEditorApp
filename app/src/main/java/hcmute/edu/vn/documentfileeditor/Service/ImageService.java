@@ -86,12 +86,9 @@ public class ImageService {
 
         int srcW = original.getWidth();
         int srcH = original.getHeight();
-
-        // Clamp target dimensions to source
         int cropW = Math.min(targetWidth, srcW);
         int cropH = Math.min(targetHeight, srcH);
 
-        // Center crop
         int x = (srcW - cropW) / 2;
         int y = (srcH - cropH) / 2;
 

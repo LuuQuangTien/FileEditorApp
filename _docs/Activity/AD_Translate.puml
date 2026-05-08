@@ -1,0 +1,54 @@
+@startuml
+title Activity Diagram: Translate
+
+start
+
+:Open TranslateActivity;
+:Select source & target language;
+:Enter text;
+
+if (Click swap?) then (Yes)
+  :Swap languages;
+endif
+
+:Click "Translate";
+
+if (Text empty?) then (Yes)
+  :Show error;
+  stop
+endif
+
+if (Source == Target?) then (Yes)
+  :Show error;
+  stop
+endif
+
+:Call TranslateService.translate();
+
+:Download ML Kit model if needed;
+
+if (Download success?) then (Yes)
+
+  :Translate text;
+
+  if (Success?) then (Yes)
+    :Display translated text;
+
+    if (User click Copy?) then (Yes)
+      :Copy to clipboard;
+    endif
+
+    if (User click Download?) then (Yes)
+      :Save .txt to internal storage;
+    endif
+
+  else (No)
+    :Show translation error;
+  endif
+
+else (No)
+  :Show model download error;
+endif
+
+stop
+@enduml

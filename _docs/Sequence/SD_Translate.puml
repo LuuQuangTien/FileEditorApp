@@ -1,0 +1,66 @@
+@startuml
+title Sequence Diagram: Translate
+
+actor User
+participant "UI\n(TranslateActivity)" as UI
+participant "TranslateService" as TranSvc
+participant "ML Kit Translation" as MLKit
+
+== Input ==
+
+User -> UI : Enter text
+User -> UI : Select languages
+
+opt Swap Languages
+  User -> UI : Click swap
+  UI -> UI : Swap spinner
+end
+
+User -> UI : Click "Translate"
+
+UI -> TranSvc : translate(text, source, target)
+activate TranSvc
+
+alt Text empty
+  TranSvc --> UI : onFailure("Vui lòng nhập...")
+  UI --> User : Show error
+  deactivate TranSvc
+else Same language
+  TranSvc --> UI : onFailure("Ngôn ngữ trùng")
+  UI --> User : Show error
+  deactivate TranSvc
+else Valid input
+
+  TranSvc -> MLKit : downloadModelIfNeeded()
+  activate MLKit
+
+  alt Model downloading (delayed notify)
+    TranSvc --> UI : onModelDownloading()
+    UI --> User : "Đang tải model..."
+  end
+
+  MLKit --> TranSvc : Model ready
+
+  TranSvc -> MLKit : translate(text)
+  MLKit --> TranSvc : translatedText
+  deactivate MLKit
+
+  TranSvc --> UI : onSuccess(result)
+  deactivate TranSvc
+
+  UI --> User : Display result
+end
+
+== Post actions ==
+
+opt Copy
+  User -> UI : Click copy
+  UI -> UI : Clipboard copy
+end
+
+opt Download
+  User -> UI : Click download
+  UI -> UI : Save to internal storage (/files/translations)
+end
+
+@enduml

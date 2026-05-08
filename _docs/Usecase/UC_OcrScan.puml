@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+actor "User" as user
+actor "Camera / Gallery" as media <<Device>>
+actor "Google ML Kit (Vision)" as ml_api <<External System>>
+actor "ML Kit Translate" as translate_api <<External System>>
+actor "CloudConvert API" as cloudconvert <<External System>>
+actor "Cloudinary Storage" as cloudinary <<External System>>
+actor "Firestore Database" as fb_db <<External System>>
+
+package "OCR & Document Scanner" {
+  usecase "Scan Image\n→ PDF (Local)" as UC_ScanImage
+  usecase "Upload Document\n(doc/xls/txt)" as UC_UploadDoc
+  usecase "Convert Document to PDF" as UC_ConvertPdf
+  usecase "Save PDF" as UC_SavePdf
+
+  usecase "Extract Text (OCR)" as UC_OCR
+  usecase "Translate Text" as UC_Translate
+  usecase "Copy Text" as UC_Copy
+}
+
+user --> UC_ScanImage
+user --> UC_UploadDoc
+user --> UC_OCR
+
+UC_ScanImage --> media
+UC_UploadDoc --> media
+
+UC_UploadDoc ..> UC_ConvertPdf : <<include>>
+UC_ScanImage ..> UC_SavePdf : <<include>>
+UC_ConvertPdf ..> UC_SavePdf : <<include>>
+
+UC_OCR --> media
+UC_OCR ..> UC_Translate : <<extend>>
+UC_OCR ..> UC_Copy : <<extend>>
+
+UC_OCR --> ml_api
+UC_Translate --> translate_api
+UC_ConvertPdf --> cloudconvert
+UC_SavePdf --> cloudinary
+UC_SavePdf --> fb_db
+@enduml
